@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Bookmark, DownloadCloud, ExternalLink, RefreshCw } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { AlertTriangle, ArrowUp, Bookmark, DownloadCloud, ExternalLink, RefreshCw } from 'lucide-react'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { join } from '@tauri-apps/api/path'
 import { useThread } from '../../hooks/useThread'
@@ -22,17 +23,36 @@ export function ThreadView({ siteId, boardCode, threadId }: { siteId: string; bo
   const { data, loading, error, reload } = useThread(siteId, boardCode, threadId)
   const isBookmarked = useBookmarksStore((s) => s.isBookmarked(siteId, boardCode, threadId))
   const toggleBookmark = useBookmarksStore((s) => s.toggle)
+  const markSeen = useBookmarksStore((s) => s.markSeen)
   const startJob = useDownloadsStore((s) => s.startJob)
   const downloadDir = useSettingsStore((s) => s.downloadDir)
   const setDownloadDir = useSettingsStore((s) => s.setDownloadDir)
   const [highlighted, setHighlighted] = useState<string | null>(null)
   const [downloadingAll, setDownloadingAll] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const replyCount = data?.replies.length
 
   useEffect(() => {
     if (!highlighted) return
     const t = setTimeout(() => setHighlighted(null), 1400)
     return () => clearTimeout(t)
   }, [highlighted])
+
+  // Reading the thread is what clears its "new replies" badge in the catalog.
+  useEffect(() => {
+    if (replyCount == null) return
+    markSeen(siteId, boardCode, threadId, replyCount)
+  }, [markSeen, siteId, boardCode, threadId, replyCount])
+
+  useEffect(() => {
+    function onRefresh() {
+      reload()
+    }
+    window.addEventListener('imageboarder:refresh', onRefresh)
+    return () => window.removeEventListener('imageboarder:refresh', onRefresh)
+  }, [reload])
 
   const backlinkMap = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -112,7 +132,7 @@ export function ThreadView({ siteId, boardCode, threadId }: { siteId: string; bo
   const totalFiles = [data.op, ...data.replies].reduce((n, p) => n + p.files.length, 0)
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="relative flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-3 border-b border-border-soft px-6 py-4">
         <h1 className="line-clamp-1 text-base font-semibold text-ink">{data.op.subject || `Thread #${threadId}`}</h1>
         <span className="shrink-0 rounded-full bg-surface-3 px-2 py-0.5 text-[11px] font-medium text-ink-faint">{data.replies.length + 1} posts</span>
@@ -156,18 +176,39 @@ export function ThreadView({ siteId, boardCode, threadId }: { siteId: string; bo
           >
             <ExternalLink size={15} />
           </button>
-          <button type="button" onClick={reload} title="Refresh thread" className="btn-icon">
+          <button type="button" onClick={reload} title="Refresh thread (R)" className="btn-icon">
             <RefreshCw size={15} className={cn(loading && 'animate-spin')} />
           </button>
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-5">
+      <div
+        ref={scrollRef}
+        onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 600)}
+        className="relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-5"
+      >
         <PostCard post={data.op} site={site} highlighted={highlighted === data.op.id} backlinks={backlinkMap.get(data.op.id)} onQuoteClick={handleQuoteClick} />
         {data.replies.map((r) => (
           <PostCard key={r.id} post={r} site={site} highlighted={highlighted === r.id} backlinks={backlinkMap.get(r.id)} onQuoteClick={handleQuoteClick} />
         ))}
       </div>
+
+      <AnimatePresence>
+        {scrolled && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, scale: 0.8, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 8 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+            title="Back to top"
+            className="absolute bottom-24 right-6 z-20 flex size-10 items-center justify-center rounded-full bg-surface-4 text-ink shadow-lg transition-colors hover:text-accent"
+          >
+            <ArrowUp size={17} />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {!data.op.closed && <ReplyComposer site={site} boardCode={boardCode} threadId={threadId} onPosted={reload} />}
     </div>

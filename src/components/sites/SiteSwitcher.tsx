@@ -21,7 +21,7 @@ export function SiteSwitcher() {
   const sites = allSites.filter((s) => !hideNsfwSites || revealHidden || !s.nsfw || s.id === currentSiteId)
 
   return (
-    <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
+    <div className="flex items-center gap-2.5 overflow-x-auto pb-1 pt-2.5">
       {sites.map((site) => {
         const active = site.id === currentSiteId
         return (

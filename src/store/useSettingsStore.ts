@@ -30,6 +30,7 @@ interface SettingsState {
   backgroundTheme: BackgroundTheme
   catalogViewMode: CatalogViewMode
   muteWebmsByDefault: boolean
+  birthdayHats: boolean
   hasCompletedOnboarding: boolean
   hydrated: boolean
   hydrate: () => Promise<void>
@@ -41,6 +42,7 @@ interface SettingsState {
   setBackgroundTheme: (theme: BackgroundTheme) => Promise<void>
   setCatalogViewMode: (mode: CatalogViewMode) => Promise<void>
   setMuteWebmsByDefault: (v: boolean) => Promise<void>
+  setBirthdayHats: (v: boolean) => Promise<void>
   setHasCompletedOnboarding: (v: boolean) => Promise<void>
 }
 
@@ -53,6 +55,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   backgroundTheme: 'none',
   catalogViewMode: 'grid',
   muteWebmsByDefault: true,
+  birthdayHats: true,
   hasCompletedOnboarding: false,
   hydrated: false,
 
@@ -67,6 +70,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const backgroundTheme = (await store.get<BackgroundTheme>('backgroundTheme')) ?? 'none'
     const catalogViewMode = (await store.get<CatalogViewMode>('catalogViewMode')) ?? 'grid'
     const muteWebmsByDefault = (await store.get<boolean>('muteWebmsByDefault')) ?? true
+    const birthdayHats = (await store.get<boolean>('birthdayHats')) ?? true
     const hasCompletedOnboarding = (await store.get<boolean>('hasCompletedOnboarding')) ?? false
     set({
       downloadDir,
@@ -77,6 +81,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       backgroundTheme,
       catalogViewMode,
       muteWebmsByDefault,
+      birthdayHats,
       hasCompletedOnboarding,
       hydrated: true,
     })
@@ -128,6 +133,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({ muteWebmsByDefault: v })
     const store = await getStore()
     await store.set('muteWebmsByDefault', v)
+  },
+
+  setBirthdayHats: async (v) => {
+    set({ birthdayHats: v })
+    const store = await getStore()
+    await store.set('birthdayHats', v)
   },
 
   setHasCompletedOnboarding: async (v) => {

@@ -16,6 +16,7 @@ import { useSitesStore } from './store/useSitesStore'
 import { useBookmarksStore } from './store/useBookmarksStore'
 import { useSettingsStore } from './store/useSettingsStore'
 import { useApplyTheme } from './hooks/useApplyTheme'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { LayoutGrid } from 'lucide-react'
 
 function MainView() {
@@ -79,6 +80,7 @@ function App() {
   }, [hydrateSites, hydrateBookmarks, hydrateSettings])
 
   useApplyTheme()
+  useKeyboardShortcuts()
 
   if (!settingsHydrated) {
     return <div className="h-screen w-screen bg-canvas" />

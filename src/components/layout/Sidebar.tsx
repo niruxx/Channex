@@ -3,6 +3,7 @@ import { SiteSwitcher } from '../sites/SiteSwitcher'
 import { BoardList } from '../sites/BoardList'
 import { useNavStore } from '../../store/useNavStore'
 import { useDownloadsStore } from '../../store/useDownloadsStore'
+import { useBookmarksStore } from '../../store/useBookmarksStore'
 import { cn } from '../../lib/cn'
 
 export function Sidebar() {
@@ -13,6 +14,7 @@ export function Sidebar() {
   const activeDownloads = useDownloadsStore((s) =>
     s.jobs.reduce((n, j) => n + j.items.filter((i) => i.status === 'pending' || i.status === 'downloading').length, 0),
   )
+  const bookmarkCount = useBookmarksStore((s) => s.bookmarks.length)
 
   return (
     <aside className="glass flex h-full w-72 shrink-0 flex-col border-r border-border-soft">
@@ -29,7 +31,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex flex-col gap-1 border-t border-border-soft p-3">
-        <NavButton icon={Bookmark} label="Bookmarks" active={view === 'bookmarks'} onClick={goBookmarks} />
+        <NavButton icon={Bookmark} label="Bookmarks" active={view === 'bookmarks'} onClick={goBookmarks} badge={bookmarkCount || undefined} muted />
         <NavButton icon={Download} label="Downloads" active={view === 'downloads'} onClick={goDownloads} badge={activeDownloads || undefined} />
         <NavButton icon={Settings} label="Settings" active={view === 'settings'} onClick={goSettings} />
       </nav>
@@ -43,12 +45,15 @@ function NavButton({
   active,
   onClick,
   badge,
+  muted,
 }: {
   icon: typeof Bookmark
   label: string
   active: boolean
   onClick: () => void
   badge?: number
+  /** Informational counts stay quiet; only live activity earns the accent badge. */
+  muted?: boolean
 }) {
   return (
     <button
@@ -68,7 +73,14 @@ function NavButton({
       <Icon size={17} strokeWidth={2} className={cn('transition-colors', active && 'text-accent')} />
       <span className="flex-1 text-left font-medium">{label}</span>
       {!!badge && (
-        <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-accent-ink">{badge}</span>
+        <span
+          className={cn(
+            'rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
+            muted ? 'bg-surface-3 text-ink-faint' : 'bg-accent text-accent-ink',
+          )}
+        >
+          {badge}
+        </span>
       )}
     </button>
   )

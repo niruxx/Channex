@@ -7,6 +7,8 @@ import { formatRelative } from '../../lib/format'
 import { useBookmarksStore } from '../../store/useBookmarksStore'
 import { useSettingsStore } from '../../store/useSettingsStore'
 import { cn } from '../../lib/cn'
+import { BirthdayHat } from '../common/BirthdayHat'
+import { useShowBirthdayHats } from '../../hooks/useShowBirthdayHats'
 
 export function ThreadListRow({
   post,
@@ -22,9 +24,13 @@ export function ThreadListRow({
   index: number
 }) {
   const isBookmarked = useBookmarksStore((s) => s.isBookmarked(site.id, boardCode, post.threadId))
+  const lastSeen = useBookmarksStore((s) => s.getBookmark(site.id, boardCode, post.threadId)?.lastSeenReplyCount)
   const toggle = useBookmarksStore((s) => s.toggle)
   const blurNsfw = useSettingsStore((s) => s.blurNsfw)
   const [revealed, setRevealed] = useState(false)
+  const showHat = useShowBirthdayHats()
+
+  const newReplies = lastSeen == null ? 0 : Math.max(0, (post.replyCount ?? 0) - lastSeen)
 
   const thumb = post.files[0]
   const excerpt = htmlToText(post.commentHtml)
@@ -73,6 +79,7 @@ export function ThreadListRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
+          {showHat && <BirthdayHat size={16} rotate={-14} className="shrink-0" />}
           {post.sticky && <Pin size={11} className="shrink-0 text-accent" />}
           {post.closed && <Lock size={11} className="shrink-0 text-red-400" />}
           {post.subject && <span className="line-clamp-1 text-[13px] font-semibold text-ink">{post.subject}</span>}
@@ -81,6 +88,11 @@ export function ThreadListRow({
       </div>
 
       <div className="flex shrink-0 items-center gap-4 text-[11px] font-medium text-ink-faint">
+        {newReplies > 0 && (
+          <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-ink" title={`${newReplies} new since you last read this`}>
+            +{newReplies}
+          </span>
+        )}
         <span className="flex items-center gap-1">
           <MessageSquare size={12} /> {post.replyCount ?? 0}
         </span>

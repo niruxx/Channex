@@ -9,6 +9,8 @@ import { useSettingsStore } from '../../store/useSettingsStore'
 import { useDownloadsStore } from '../../store/useDownloadsStore'
 import { pickDownloadDir } from '../../lib/download'
 import { cn } from '../../lib/cn'
+import { BirthdayHat } from '../common/BirthdayHat'
+import { useShowBirthdayHats } from '../../hooks/useShowBirthdayHats'
 
 export function PostCard({
   post,
@@ -29,6 +31,7 @@ export function PostCard({
   const downloadDir = useSettingsStore((s) => s.downloadDir)
   const setDownloadDir = useSettingsStore((s) => s.setDownloadDir)
   const [revealed, setRevealed] = useState<Record<number, boolean>>({})
+  const showHat = useShowBirthdayHats()
 
   return (
     <motion.div
@@ -41,9 +44,11 @@ export function PostCard({
         backgroundColor: highlighted ? 'color-mix(in oklab, var(--color-accent) 14%, var(--color-surface-2))' : 'var(--color-surface-2)',
       }}
       transition={{ duration: 0.3 }}
-      className={cn('scroll-mt-16 rounded-2xl border p-4', highlighted ? 'border-accent/50' : 'border-border-soft')}
+      className={cn('relative scroll-mt-16 rounded-2xl border p-4', highlighted ? 'border-accent/50' : 'border-border-soft')}
       style={{ boxShadow: 'var(--shadow-sm)' }}
     >
+      {showHat && <BirthdayHat size={26} rotate={-20} className="absolute -top-3 left-3 z-10" />}
+
       <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs">
         {post.subject && <span className="font-semibold text-ink">{post.subject}</span>}
         <span className="font-semibold text-emerald-300/90">{post.name}</span>

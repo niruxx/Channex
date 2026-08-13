@@ -16,6 +16,8 @@ export function SettingsPanel() {
   const setHideNsfwSites = useSettingsStore((s) => s.setHideNsfwSites)
   const muteWebmsByDefault = useSettingsStore((s) => s.muteWebmsByDefault)
   const setMuteWebmsByDefault = useSettingsStore((s) => s.setMuteWebmsByDefault)
+  const birthdayHats = useSettingsStore((s) => s.birthdayHats)
+  const setBirthdayHats = useSettingsStore((s) => s.setBirthdayHats)
   const setHasCompletedOnboarding = useSettingsStore((s) => s.setHasCompletedOnboarding)
   const sites = useSitesStore((s) => s.sites)
   const removeCustomSite = useSitesStore((s) => s.removeCustomSite)
@@ -103,6 +105,18 @@ export function SettingsPanel() {
                 type="checkbox"
                 checked={muteWebmsByDefault}
                 onChange={(e) => setMuteWebmsByDefault(e.target.checked)}
+                className="size-4 shrink-0 accent-accent"
+              />
+            </label>
+            <label className="flex cursor-pointer items-center justify-between gap-4 p-4">
+              <div>
+                <p className="text-sm font-medium text-ink">Birthday hats</p>
+                <p className="mt-0.5 text-xs text-ink-faint">On 4chan's birthday (October 1st), show a party hat on site logos and every post.</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={birthdayHats}
+                onChange={(e) => setBirthdayHats(e.target.checked)}
                 className="size-4 shrink-0 accent-accent"
               />
             </label>

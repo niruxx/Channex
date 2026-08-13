@@ -7,6 +7,8 @@ import { formatRelative } from '../../lib/format'
 import { useBookmarksStore } from '../../store/useBookmarksStore'
 import { useSettingsStore } from '../../store/useSettingsStore'
 import { cn } from '../../lib/cn'
+import { BirthdayHat } from '../common/BirthdayHat'
+import { useShowBirthdayHats } from '../../hooks/useShowBirthdayHats'
 
 export function ThreadCard({
   post,
@@ -24,9 +26,13 @@ export function ThreadCard({
   compact?: boolean
 }) {
   const isBookmarked = useBookmarksStore((s) => s.isBookmarked(site.id, boardCode, post.threadId))
+  const lastSeen = useBookmarksStore((s) => s.getBookmark(site.id, boardCode, post.threadId)?.lastSeenReplyCount)
   const toggle = useBookmarksStore((s) => s.toggle)
   const blurNsfw = useSettingsStore((s) => s.blurNsfw)
   const [revealed, setRevealed] = useState(false)
+  const showHat = useShowBirthdayHats()
+
+  const newReplies = lastSeen == null ? 0 : Math.max(0, (post.replyCount ?? 0) - lastSeen)
 
   const thumb = post.files[0]
   const excerpt = htmlToText(post.commentHtml)
@@ -74,7 +80,8 @@ export function ThreadCard({
           </div>
         )}
         <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2">
-          <div className="flex gap-1">
+          <div className="flex items-start gap-1">
+            {showHat && <BirthdayHat size={20} rotate={-14} className="-ml-0.5 -mt-0.5" />}
             {post.sticky && (
               <span className="flex size-6 items-center justify-center rounded-full bg-black/55 text-accent backdrop-blur-sm">
                 <Pin size={11} />
@@ -125,6 +132,11 @@ export function ThreadCard({
           <span className="flex items-center gap-1">
             <ImageIcon size={11} /> {post.imageCount ?? 0}
           </span>
+          {newReplies > 0 && (
+            <span className="rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold text-accent-ink" title={`${newReplies} new since you last read this`}>
+              +{newReplies}
+            </span>
+          )}
           {!compact && <span className="ml-auto">{formatRelative(post.timestamp)}</span>}
         </div>
       </div>

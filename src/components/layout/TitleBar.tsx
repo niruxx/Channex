@@ -16,14 +16,23 @@ export function TitleBar() {
   const site = useSitesStore((s) => s.getSite(siteId))
   const mac = isMac()
 
-  const crumbs: string[] = []
-  if (view === 'bookmarks') crumbs.push('Bookmarks')
-  else if (view === 'downloads') crumbs.push('Downloads')
-  else if (view === 'settings') crumbs.push('Settings')
+  const goCatalog = useNavStore((s) => s.goCatalog)
+
+  type Crumb = { label: string; onClick?: () => void }
+  const crumbs: Crumb[] = []
+  if (view === 'bookmarks') crumbs.push({ label: 'Bookmarks' })
+  else if (view === 'downloads') crumbs.push({ label: 'Downloads' })
+  else if (view === 'settings') crumbs.push({ label: 'Settings' })
   else {
-    if (site) crumbs.push(site.name)
-    if (boardCode) crumbs.push(`/${boardCode}/`)
-    if (view === 'thread' && threadId) crumbs.push(`Thread #${threadId}`)
+    if (site) crumbs.push({ label: site.name })
+    if (boardCode) {
+      crumbs.push({
+        label: `/${boardCode}/`,
+        // Only a link when it actually goes somewhere — on the catalog itself it's the current page.
+        onClick: view === 'thread' ? () => goCatalog(siteId, boardCode) : undefined,
+      })
+    }
+    if (view === 'thread' && threadId) crumbs.push({ label: `Thread #${threadId}` })
   }
 
   return (
@@ -52,7 +61,17 @@ export function TitleBar() {
           {crumbs.map((c, i) => (
             <span key={i} className="flex items-center gap-1.5 truncate">
               {i > 0 && <span className="text-ink-faint">/</span>}
-              <span className={cn('truncate', i === crumbs.length - 1 && 'font-semibold text-ink')}>{c}</span>
+              {c.onClick ? (
+                <button
+                  type="button"
+                  onClick={c.onClick}
+                  className="truncate rounded px-1 py-0.5 transition-colors hover:bg-surface-3 hover:text-ink"
+                >
+                  {c.label}
+                </button>
+              ) : (
+                <span className={cn('truncate', i === crumbs.length - 1 && 'font-semibold text-ink')}>{c.label}</span>
+              )}
             </span>
           ))}
         </div>
