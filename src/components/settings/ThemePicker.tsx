@@ -13,7 +13,7 @@ export function ThemePicker() {
   const setTheme = useSettingsStore((s) => s.setTheme)
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 gap-2.5">
       {THEME_OPTIONS.map(({ mode, label, icon: Icon }) => {
         const active = theme === mode
         return (
@@ -22,11 +22,11 @@ export function ThemePicker() {
             type="button"
             onClick={() => setTheme(mode)}
             className={cn(
-              'flex flex-col items-center gap-2 rounded-xl border px-3 py-3 text-xs font-medium transition-colors',
+              'flex flex-col items-center gap-2 rounded-xl border px-3.5 py-3.5 text-sm font-medium transition-colors',
               active ? 'border-accent/60 bg-accent/10 text-ink' : 'border-border-soft bg-surface-3 text-ink-dim hover:text-ink',
             )}
           >
-            <Icon size={17} className={active ? 'text-accent' : undefined} />
+            <Icon size={18} className={active ? 'text-accent' : undefined} />
             {label}
           </button>
         )

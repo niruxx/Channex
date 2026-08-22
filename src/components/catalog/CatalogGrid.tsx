@@ -71,12 +71,12 @@ export function CatalogGrid({ siteId, boardCode }: { siteId: string; boardCode: 
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center gap-3 border-b border-border-soft px-6 py-3.5">
-        <div className="flex min-w-0 items-baseline gap-2">
-          <h1 className="shrink-0 text-base font-semibold text-ink">/{boardCode}/</h1>
+      <div className="flex items-center gap-3.5 border-b border-border-soft px-7 py-4">
+        <div className="flex min-w-0 items-baseline gap-2.5">
+          <h1 className="shrink-0 text-lg font-semibold text-ink">/{boardCode}/</h1>
           {boardTitle && <span className="truncate text-sm text-ink-dim">{boardTitle}</span>}
         </div>
-        <span className="shrink-0 rounded-full bg-surface-3 px-2 py-0.5 text-[11px] font-medium text-ink-faint">
+        <span className="shrink-0 rounded-full bg-surface-3 px-2.5 py-1 text-xs font-medium text-ink-faint">
           {filtering ? `${visible?.length ?? 0} of ${threads?.length ?? 0}` : `${threads?.length ?? 0} threads`}
         </span>
         <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -100,7 +100,7 @@ export function CatalogGrid({ siteId, boardCode }: { siteId: string; boardCode: 
           }
         />
       ) : viewMode === 'list' ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-6">
+        <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-7">
           {visible?.map((t, i) => (
             <ThreadListRow key={t.id} post={t} site={site} boardCode={boardCode} index={i} onOpen={() => goThread(siteId, boardCode, t.threadId)} />
           ))}
@@ -110,7 +110,7 @@ export function CatalogGrid({ siteId, boardCode }: { siteId: string; boardCode: 
           layout
           className={cn(
             'grid min-h-0 flex-1 auto-rows-min overflow-y-auto',
-            viewMode === 'compact' ? 'grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-3 p-5' : 'grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-5 p-6',
+            viewMode === 'compact' ? 'grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4 p-6' : 'grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-6 p-7',
           )}
         >
           {visible?.map((t, i) => (

@@ -21,7 +21,7 @@ export function SiteSwitcher() {
   const sites = allSites.filter((s) => !hideNsfwSites || revealHidden || !s.nsfw || s.id === currentSiteId)
 
   return (
-    <div className="flex items-center gap-2.5 overflow-x-auto pb-1 pt-2.5">
+    <div className="flex items-center gap-3 overflow-x-auto pb-1.5 pt-3">
       {sites.map((site) => {
         const active = site.id === currentSiteId
         return (
@@ -35,12 +35,12 @@ export function SiteSwitcher() {
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.94 }}
             title={site.name}
-            className="group relative flex shrink-0 flex-col items-center gap-1"
+            className="group relative flex shrink-0 flex-col items-center gap-1.5"
           >
-            <SiteAvatar site={site} size={40} ring={active} />
+            <SiteAvatar site={site} size={44} ring={active} />
             <span
               className={cn(
-                'max-w-12 truncate text-[10px] text-ink-faint transition-colors',
+                'max-w-14 truncate text-[11px] text-ink-faint transition-colors',
                 active && 'text-ink-dim',
               )}
             >
@@ -55,12 +55,12 @@ export function SiteSwitcher() {
         whileTap={{ scale: 0.94 }}
         onClick={() => setShowAdd(true)}
         title="Add a custom imageboard site"
-        className="flex shrink-0 flex-col items-center gap-1"
+        className="flex shrink-0 flex-col items-center gap-1.5"
       >
-        <span className="flex size-10 items-center justify-center rounded-full border border-dashed border-border text-ink-faint transition-colors hover:border-accent hover:text-accent">
-          <Plus size={18} />
+        <span className="flex size-11 items-center justify-center rounded-full border border-dashed border-border text-ink-faint transition-colors hover:border-accent hover:text-accent">
+          <Plus size={19} />
         </span>
-        <span className="text-[10px] text-ink-faint">Add</span>
+        <span className="text-[11px] text-ink-faint">Add</span>
       </motion.button>
 
       {hideNsfwSites && !revealHidden && hiddenCount > 0 && (
@@ -68,12 +68,12 @@ export function SiteSwitcher() {
           type="button"
           onClick={() => setRevealHidden(true)}
           title="Show hidden 18+ sites"
-          className="flex shrink-0 flex-col items-center gap-1"
+          className="flex shrink-0 flex-col items-center gap-1.5"
         >
-          <span className="flex size-10 items-center justify-center rounded-full border border-dashed border-border text-ink-faint transition-colors hover:border-accent hover:text-accent">
-            <Eye size={16} />
+          <span className="flex size-11 items-center justify-center rounded-full border border-dashed border-border text-ink-faint transition-colors hover:border-accent hover:text-accent">
+            <Eye size={17} />
           </span>
-          <span className="text-[10px] text-ink-faint">+{hiddenCount}</span>
+          <span className="text-[11px] text-ink-faint">+{hiddenCount}</span>
         </button>
       )}
 

@@ -44,9 +44,9 @@ export function ThreadListRow({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: Math.min(index * 0.015, 0.3), ease: [0.16, 1, 0.3, 1] }}
-      className="card group flex items-center gap-3.5 p-2.5 text-left transition-colors duration-200 hover:border-border"
+      className="card group flex items-center gap-4 p-3 text-left transition-colors duration-200 hover:border-border"
     >
-      <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-surface-3">
+      <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-surface-3">
         {thumb ? (
           <img
             src={thumb.thumbUrl}
@@ -78,26 +78,26 @@ export function ThreadListRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          {showHat && <BirthdayHat size={16} rotate={-14} className="shrink-0" />}
-          {post.sticky && <Pin size={11} className="shrink-0 text-accent" />}
-          {post.closed && <Lock size={11} className="shrink-0 text-red-400" />}
-          {post.subject && <span className="line-clamp-1 text-[13px] font-semibold text-ink">{post.subject}</span>}
+        <div className="flex items-center gap-2">
+          {showHat && <BirthdayHat size={17} rotate={-14} className="shrink-0" />}
+          {post.sticky && <Pin size={12} className="shrink-0 text-accent" />}
+          {post.closed && <Lock size={12} className="shrink-0 text-red-400" />}
+          {post.subject && <span className="line-clamp-1 text-sm font-semibold text-ink">{post.subject}</span>}
         </div>
-        <p className="line-clamp-1 text-xs text-ink-dim">{excerpt || <span className="italic text-ink-faint">No comment</span>}</p>
+        <p className="line-clamp-1 text-sm text-ink-dim">{excerpt || <span className="italic text-ink-faint">No comment</span>}</p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-4 text-[11px] font-medium text-ink-faint">
+      <div className="flex shrink-0 items-center gap-5 text-xs font-medium text-ink-faint">
         {newReplies > 0 && (
-          <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-ink" title={`${newReplies} new since you last read this`}>
+          <span className="rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-bold text-accent-ink" title={`${newReplies} new since you last read this`}>
             +{newReplies}
           </span>
         )}
-        <span className="flex items-center gap-1">
-          <MessageSquare size={12} /> {post.replyCount ?? 0}
+        <span className="flex items-center gap-1.5">
+          <MessageSquare size={13} /> {post.replyCount ?? 0}
         </span>
-        <span className="flex items-center gap-1">
-          <ImageIcon size={12} /> {post.imageCount ?? 0}
+        <span className="flex items-center gap-1.5">
+          <ImageIcon size={13} /> {post.imageCount ?? 0}
         </span>
         <span className="hidden w-16 text-right sm:inline">{formatRelative(post.timestamp)}</span>
         <button
@@ -115,9 +115,9 @@ export function ThreadListRow({
               lastSeenReplyCount: post.replyCount,
             })
           }}
-          className={cn('btn-icon size-7', isBookmarked && 'text-accent hover:text-accent')}
+          className={cn('btn-icon size-8', isBookmarked && 'text-accent hover:text-accent')}
         >
-          <Bookmark size={13} fill={isBookmarked ? 'currentColor' : 'none'} />
+          <Bookmark size={14} fill={isBookmarked ? 'currentColor' : 'none'} />
         </button>
       </div>
     </motion.button>

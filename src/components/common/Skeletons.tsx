@@ -12,7 +12,7 @@ export function ThreadCardSkeleton() {
 
 export function CatalogGridSkeleton({ count = 18 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-5 p-6">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-6 p-7">
       {Array.from({ length: count }).map((_, i) => (
         <ThreadCardSkeleton key={i} />
       ))}

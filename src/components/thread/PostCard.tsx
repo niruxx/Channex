@@ -44,27 +44,27 @@ export function PostCard({
         backgroundColor: highlighted ? 'color-mix(in oklab, var(--color-accent) 14%, var(--color-surface-2))' : 'var(--color-surface-2)',
       }}
       transition={{ duration: 0.3 }}
-      className={cn('relative scroll-mt-16 rounded-2xl border p-4', highlighted ? 'border-accent/50' : 'border-border-soft')}
+      className={cn('relative scroll-mt-16 rounded-2xl border p-5', highlighted ? 'border-accent/50' : 'border-border-soft')}
       style={{ boxShadow: 'var(--shadow-sm)' }}
     >
       {showHat && <BirthdayHat size={26} rotate={-20} className="absolute -top-3 left-3 z-10" />}
 
-      <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs">
+      <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px]">
         {post.subject && <span className="font-semibold text-ink">{post.subject}</span>}
         <span className="font-semibold text-emerald-300/90">{post.name}</span>
         {post.tripcode && <span className="text-violet-300/80">{post.tripcode}</span>}
         {post.capcode && (
-          <span className="rounded-full bg-accent/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">{post.capcode}</span>
+          <span className="rounded-full bg-accent/20 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent">{post.capcode}</span>
         )}
         {post.countryCode && <span className="text-ink-faint" title={post.countryName}>{post.countryCode}</span>}
         <span className="text-ink-faint">{formatDate(post.timestamp)}</span>
         <span className="text-ink-faint">No.{post.id}</span>
-        {post.sticky && <Pin size={11} className="text-accent" />}
-        {post.closed && <Lock size={11} className="text-red-400" />}
+        {post.sticky && <Pin size={12} className="text-accent" />}
+        {post.closed && <Lock size={12} className="text-red-400" />}
       </div>
 
       {backlinks && backlinks.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1.5 text-[11px]">
+        <div className="mb-2.5 flex flex-wrap gap-1.5 text-xs">
           {backlinks.map((id) => (
             <button key={id} type="button" onClick={() => onQuoteClick?.(id)} className="rounded-md bg-surface-3 px-1.5 py-0.5 text-sky-400 transition-colors hover:bg-surface-4 hover:underline">
               &gt;&gt;{id}
@@ -74,7 +74,7 @@ export function PostCard({
       )}
 
       {post.files.length > 0 && (
-        <div className="mb-3 flex flex-wrap gap-2.5">
+        <div className="mb-3.5 flex flex-wrap gap-3">
           {post.files.map((file, i) => {
             const shouldBlur = (site.nsfw || file.spoiler) && blurNsfw && !revealed[i]
             return (
@@ -94,16 +94,16 @@ export function PostCard({
                   <img
                     src={file.thumbUrl}
                     alt={file.name}
-                    className={cn('h-40 w-auto max-w-56 object-cover transition-transform duration-200 group-hover:scale-[1.03]', shouldBlur && 'blur-xl')}
+                    className={cn('h-48 w-auto max-w-64 object-cover transition-transform duration-200 group-hover:scale-[1.03]', shouldBlur && 'blur-xl')}
                   />
                   {file.isVideo && !shouldBlur && (
                     <span className="absolute inset-0 flex items-center justify-center bg-black/20">
-                      <Play size={22} className="text-white drop-shadow" fill="white" />
+                      <Play size={24} className="text-white drop-shadow" fill="white" />
                     </span>
                   )}
                   {shouldBlur && (
-                    <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-[11px] font-medium text-white">
-                      <EyeOff size={14} />
+                    <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-xs font-medium text-white">
+                      <EyeOff size={15} />
                       Reveal
                     </span>
                   )}
@@ -121,12 +121,12 @@ export function PostCard({
                       }
                       await startJob(file.name, dir, [{ url: file.url, fileName: file.name }])
                     }}
-                    className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-black/55 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
+                    className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/55 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
                   >
-                    <Download size={12} />
+                    <Download size={13} />
                   </button>
                 )}
-                <div className="mt-1.5 max-w-56 truncate text-[10px] text-ink-faint">
+                <div className="mt-2 max-w-64 truncate text-[11px] text-ink-faint">
                   {file.name} {file.size ? `· ${formatBytes(file.size)}` : ''}
                 </div>
               </div>

@@ -15,18 +15,18 @@ export function DownloadsPanel() {
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-8 py-7">
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-6 flex items-center gap-3">
+    <div className="min-h-0 flex-1 overflow-y-auto px-9 py-8">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-7 flex items-center gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-ink">Downloads</h1>
+            <h1 className="text-2xl font-semibold text-ink">Downloads</h1>
             <p className="text-sm text-ink-faint">{jobs.length} job{jobs.length === 1 ? '' : 's'}</p>
           </div>
-          <button type="button" onClick={clearFinished} className="btn-ghost ml-auto px-2.5 py-1.5 text-xs">
+          <button type="button" onClick={clearFinished} className="btn-ghost ml-auto px-3 py-2 text-sm">
             Clear finished
           </button>
         </div>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3.5">
           {jobs.map((job, i) => {
             const done = job.items.filter((it) => it.status === 'done').length
             const errored = job.items.filter((it) => it.status === 'error').length
@@ -37,29 +37,29 @@ export function DownloadsPanel() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: Math.min(i * 0.02, 0.2) }}
-                className="card p-4"
+                className="card p-5"
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   {inProgress ? (
-                    <Loader2 size={15} className="animate-spin text-accent" />
+                    <Loader2 size={16} className="animate-spin text-accent" />
                   ) : errored > 0 ? (
-                    <XCircle size={15} className="text-red-400" />
+                    <XCircle size={16} className="text-red-400" />
                   ) : (
-                    <CheckCircle2 size={15} className="text-emerald-400" />
+                    <CheckCircle2 size={16} className="text-emerald-400" />
                   )}
                   <span className="truncate text-sm font-medium text-ink">{job.label}</span>
                   <span className="ml-auto shrink-0 text-xs text-ink-faint">
                     {done}/{job.items.length}
                     {errored > 0 && ` · ${errored} failed`}
                   </span>
-                  <button type="button" onClick={() => revealInFolder(job.destDir)} title="Open folder" className="btn-icon size-7">
-                    <FolderOpen size={13} />
+                  <button type="button" onClick={() => revealInFolder(job.destDir)} title="Open folder" className="btn-icon size-8">
+                    <FolderOpen size={14} />
                   </button>
-                  <button type="button" onClick={() => clearJob(job.id)} title="Remove" className="btn-icon size-7">
-                    <Trash2 size={13} />
+                  <button type="button" onClick={() => clearJob(job.id)} title="Remove" className="btn-icon size-8">
+                    <Trash2 size={14} />
                   </button>
                 </div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-3">
+                <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-surface-3">
                   <motion.div
                     className={cn('h-full rounded-full', errored > 0 && !inProgress ? 'bg-red-400' : 'bg-accent')}
                     initial={false}

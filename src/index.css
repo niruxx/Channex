@@ -246,7 +246,7 @@ p, span, .selectable, textarea, input {
 }
 
 .section-label {
-  @apply flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-ink-faint;
+  @apply flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-ink-faint;
 }
 .section-label::before {
   content: '';
@@ -254,23 +254,23 @@ p, span, .selectable, textarea, input {
 }
 
 @utility btn {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
 }
 .btn-primary {
-  @apply btn bg-accent px-3.5 py-2 text-accent-ink shadow-sm hover:brightness-110;
+  @apply btn bg-accent px-4 py-2.5 text-accent-ink shadow-sm hover:brightness-110;
 }
 .btn-secondary {
-  @apply btn border border-border bg-surface-3 px-3.5 py-2 text-ink hover:bg-surface-4;
+  @apply btn border border-border bg-surface-3 px-4 py-2.5 text-ink hover:bg-surface-4;
 }
 .btn-ghost {
-  @apply btn px-3 py-2 text-ink-dim hover:bg-surface-3 hover:text-ink;
+  @apply btn px-3.5 py-2.5 text-ink-dim hover:bg-surface-3 hover:text-ink;
 }
 .btn-icon {
-  @apply inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-faint transition-colors duration-150 hover:bg-surface-3 hover:text-ink;
+  @apply inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-faint transition-colors duration-150 hover:bg-surface-3 hover:text-ink;
 }
 
 .input {
-  @apply w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-ink outline-none transition-all placeholder:text-ink-faint focus:border-accent/60;
+  @apply w-full rounded-lg border border-border bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition-all placeholder:text-ink-faint focus:border-accent/60;
 }
 .input:focus {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 18%, transparent);

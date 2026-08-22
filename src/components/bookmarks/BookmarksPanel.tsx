@@ -17,12 +17,12 @@ export function BookmarksPanel() {
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-8 py-7">
-      <h1 className="mb-1 text-xl font-semibold text-ink">Bookmarks</h1>
-      <p className="mb-6 text-sm text-ink-faint">
+    <div className="min-h-0 flex-1 overflow-y-auto px-9 py-8">
+      <h1 className="mb-1.5 text-2xl font-semibold text-ink">Bookmarks</h1>
+      <p className="mb-7 text-sm text-ink-faint">
         {bookmarks.length} saved thread{bookmarks.length === 1 ? '' : 's'}
       </p>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
         {bookmarks.map((b, i) => {
           const site = sites.find((s) => s.id === b.siteId)
           return (
@@ -32,33 +32,33 @@ export function BookmarksPanel() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: Math.min(i * 0.02, 0.3) }}
               whileHover={{ y: -2 }}
-              className="card group relative flex gap-3 overflow-hidden p-3 transition-colors hover:border-border"
+              className="card group relative flex gap-3.5 overflow-hidden p-3.5 transition-colors hover:border-border"
             >
               <button
                 type="button"
                 onClick={() => goThread(b.siteId, b.boardCode, b.threadId)}
-                className="flex flex-1 gap-3 text-left"
+                className="flex flex-1 gap-3.5 text-left"
               >
-                <div className="size-16 shrink-0 overflow-hidden rounded-xl bg-surface-3">
+                <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-surface-3">
                   {b.thumbUrl && <img src={b.thumbUrl} alt="" className="h-full w-full object-cover" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-ink-faint">
+                  <div className="flex items-center gap-1.5 text-[11px] font-medium text-ink-faint">
                     <span style={{ color: site?.accent }}>{site?.name ?? b.siteId}</span>
                     <span>/{b.boardCode}/</span>
                   </div>
-                  {b.subject && <p className="line-clamp-1 text-[13px] font-semibold text-ink">{b.subject}</p>}
-                  <p className="line-clamp-2 text-xs text-ink-dim">{b.excerpt}</p>
-                  <p className="mt-1.5 text-[10px] text-ink-faint">Saved {formatRelative(b.addedAt)}</p>
+                  {b.subject && <p className="line-clamp-1 text-sm font-semibold text-ink">{b.subject}</p>}
+                  <p className="line-clamp-2 text-[13px] text-ink-dim">{b.excerpt}</p>
+                  <p className="mt-1.5 text-[11px] text-ink-faint">Saved {formatRelative(b.addedAt)}</p>
                 </div>
               </button>
               <button
                 type="button"
                 onClick={() => remove(b.siteId, b.boardCode, b.threadId)}
                 title="Remove bookmark"
-                className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-black/45 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
+                className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/45 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
               >
-                <Trash2 size={12} />
+                <Trash2 size={13} />
               </button>
             </motion.div>
           )

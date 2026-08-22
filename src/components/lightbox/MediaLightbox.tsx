@@ -231,9 +231,9 @@ export function MediaLightbox() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="absolute bottom-6 right-6 flex items-center gap-2 rounded-full bg-accent px-4 py-2.5 text-xs font-semibold text-accent-ink shadow-lg transition-transform active:scale-95 disabled:opacity-60"
+            className="absolute bottom-6 right-6 flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-ink shadow-lg transition-transform active:scale-95 disabled:opacity-60"
           >
-            <Download size={13} />
+            <Download size={14} />
             {saving ? 'Saving…' : 'Save to disk'}
           </button>
         </motion.div>

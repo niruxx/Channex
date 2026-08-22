@@ -119,7 +119,7 @@ export function ThreadView({ siteId, boardCode, threadId }: { siteId: string; bo
 
   if (!data && loading) {
     return (
-      <div className="flex flex-col gap-4 overflow-y-auto px-6 py-5">
+      <div className="flex flex-col gap-5 overflow-y-auto px-7 py-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <PostSkeleton key={i} />
         ))}
@@ -133,10 +133,10 @@ export function ThreadView({ siteId, boardCode, threadId }: { siteId: string; bo
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center gap-3 border-b border-border-soft px-6 py-4">
-        <h1 className="line-clamp-1 text-base font-semibold text-ink">{data.op.subject || `Thread #${threadId}`}</h1>
-        <span className="shrink-0 rounded-full bg-surface-3 px-2 py-0.5 text-[11px] font-medium text-ink-faint">{data.replies.length + 1} posts</span>
-        <div className="ml-auto flex shrink-0 items-center gap-1">
+      <div className="flex items-center gap-3.5 border-b border-border-soft px-7 py-4">
+        <h1 className="line-clamp-1 text-lg font-semibold text-ink">{data.op.subject || `Thread #${threadId}`}</h1>
+        <span className="shrink-0 rounded-full bg-surface-3 px-2.5 py-1 text-xs font-medium text-ink-faint">{data.replies.length + 1} posts</span>
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
           <button
             type="button"
             onClick={() =>
@@ -162,7 +162,7 @@ export function ThreadView({ siteId, boardCode, threadId }: { siteId: string; bo
               disabled={downloadingAll}
               onClick={handleDownloadAll}
               title="Download all media in thread"
-              className="btn-ghost px-2.5 py-1.5 text-xs disabled:opacity-50"
+              className="btn-ghost px-3 py-2 text-sm disabled:opacity-50"
             >
               <DownloadCloud size={14} />
               {downloadingAll ? 'Starting…' : `Download all (${totalFiles})`}
@@ -185,7 +185,7 @@ export function ThreadView({ siteId, boardCode, threadId }: { siteId: string; bo
       <div
         ref={scrollRef}
         onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 600)}
-        className="relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-5"
+        className="relative flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-7 py-6"
       >
         <PostCard post={data.op} site={site} highlighted={highlighted === data.op.id} backlinks={backlinkMap.get(data.op.id)} onQuoteClick={handleQuoteClick} />
         {data.replies.map((r) => (

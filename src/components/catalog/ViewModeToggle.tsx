@@ -13,7 +13,7 @@ export function ViewModeToggle() {
   const setViewMode = useSettingsStore((s) => s.setCatalogViewMode)
 
   return (
-    <div className="flex items-center gap-0.5 rounded-lg bg-surface-3 p-0.5">
+    <div className="flex items-center gap-1 rounded-lg bg-surface-3 p-1">
       {MODES.map(({ mode, icon: Icon, label }) => {
         const active = viewMode === mode
         return (
@@ -23,11 +23,11 @@ export function ViewModeToggle() {
             title={label}
             onClick={() => setViewMode(mode)}
             className={cn(
-              'flex size-7 items-center justify-center rounded-md transition-colors',
+              'flex size-8 items-center justify-center rounded-md transition-colors',
               active ? 'bg-surface-4 text-accent shadow-sm' : 'text-ink-faint hover:text-ink',
             )}
           >
-            <Icon size={14} />
+            <Icon size={15} />
           </button>
         )
       })}

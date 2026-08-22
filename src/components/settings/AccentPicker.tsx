@@ -7,7 +7,7 @@ export function AccentPicker() {
   const setAccentColor = useSettingsStore((s) => s.setAccentColor)
 
   return (
-    <div className="flex flex-wrap gap-2.5">
+    <div className="flex flex-wrap gap-3">
       {ACCENT_PRESETS.map((preset) => {
         const active = accentColor.toLowerCase() === preset.value.toLowerCase()
         return (
@@ -18,16 +18,16 @@ export function AccentPicker() {
             onClick={() => setAccentColor(preset.value)}
             whileTap={{ scale: 0.9 }}
             whileHover={{ scale: 1.08 }}
-            className="flex size-8 items-center justify-center rounded-full"
+            className="flex size-9 items-center justify-center rounded-full"
             style={{ background: preset.value, boxShadow: active ? `0 0 0 2px var(--color-surface-2), 0 0 0 4px ${preset.value}` : 'var(--shadow-sm)' }}
           >
-            {active && <Check size={14} className="text-accent-ink" strokeWidth={3} />}
+            {active && <Check size={15} className="text-accent-ink" strokeWidth={3} />}
           </motion.button>
         )
       })}
       <label
         title="Custom color"
-        className="relative flex size-8 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed border-border text-ink-faint transition-colors hover:border-accent hover:text-accent"
+        className="relative flex size-9 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed border-border text-ink-faint transition-colors hover:border-accent hover:text-accent"
       >
         +
         <input

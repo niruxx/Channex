@@ -67,17 +67,17 @@ export function AddSiteDialog({ open, onClose }: { open: boolean; onClose: () =>
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[460px] rounded-3xl border border-border bg-surface p-6"
+            className="w-[500px] rounded-3xl border border-border bg-surface p-7"
             style={{ boxShadow: 'var(--shadow-lg)' }}
           >
-            <div className="mb-5 flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-ink">Add imageboard site</h2>
               <button type="button" onClick={onClose} className="btn-icon">
                 <X size={16} />
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <Field label="Display name">
                 <input
                   value={name}

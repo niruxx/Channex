@@ -118,22 +118,22 @@ export function ThreadCard({
         </div>
       </div>
 
-      <div className={cn('flex flex-1 flex-col gap-1.5', compact ? 'p-2' : 'p-3.5')}>
-        {post.subject && <p className="line-clamp-1 text-[13px] font-semibold text-ink">{post.subject}</p>}
+      <div className={cn('flex flex-1 flex-col gap-2', compact ? 'p-2.5' : 'p-4')}>
+        {post.subject && <p className="line-clamp-1 text-sm font-semibold text-ink">{post.subject}</p>}
         {!compact && (
-          <p className="line-clamp-3 min-h-[3.2em] text-xs leading-relaxed text-ink-dim">
+          <p className="line-clamp-3 min-h-[3.2em] text-[13px] leading-relaxed text-ink-dim">
             {excerpt || <span className="italic text-ink-faint">No comment</span>}
           </p>
         )}
-        <div className={cn('mt-auto flex items-center gap-3 text-[10px] font-medium text-ink-faint', !compact && 'pt-2')}>
+        <div className={cn('mt-auto flex items-center gap-3 text-[11px] font-medium text-ink-faint', !compact && 'pt-2')}>
           <span className="flex items-center gap-1">
-            <MessageSquare size={11} /> {post.replyCount ?? 0}
+            <MessageSquare size={12} /> {post.replyCount ?? 0}
           </span>
           <span className="flex items-center gap-1">
-            <ImageIcon size={11} /> {post.imageCount ?? 0}
+            <ImageIcon size={12} /> {post.imageCount ?? 0}
           </span>
           {newReplies > 0 && (
-            <span className="rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold text-accent-ink" title={`${newReplies} new since you last read this`}>
+            <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-ink" title={`${newReplies} new since you last read this`}>
               +{newReplies}
             </span>
           )}

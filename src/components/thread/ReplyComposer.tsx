@@ -115,9 +115,9 @@ export function ReplyComposer({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex w-full items-center justify-center gap-2 px-4 py-3.5 text-sm font-medium text-ink-dim transition-colors hover:bg-surface-2 hover:text-ink"
+            className="flex w-full items-center justify-center gap-2 px-5 py-4 text-sm font-medium text-ink-dim transition-colors hover:bg-surface-2 hover:text-ink"
           >
-            <MessageSquarePlus size={15} />
+            <MessageSquarePlus size={16} />
             Reply to thread
           </motion.button>
         ) : (
@@ -129,7 +129,7 @@ export function ReplyComposer({
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <div className="space-y-3 p-5">
+            <div className="space-y-3.5 p-6">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-ink">Reply to thread #{threadId}</p>
                 <button
@@ -138,13 +138,13 @@ export function ReplyComposer({
                     setOpen(false)
                     reset()
                   }}
-                  className="btn-icon size-7"
+                  className="btn-icon size-8"
                 >
-                  <X size={14} />
+                  <X size={15} />
                 </button>
               </div>
 
-              <div className="flex gap-2.5">
+              <div className="flex gap-3">
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -178,7 +178,7 @@ export function ReplyComposer({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 rounded-lg border border-border-soft bg-surface-2 px-3 py-1.5 text-xs text-ink-dim transition-colors hover:border-border hover:text-ink"
+                  className="flex items-center gap-1.5 rounded-lg border border-border-soft bg-surface-2 px-3.5 py-2 text-sm text-ink-dim transition-colors hover:border-border hover:text-ink"
                 >
                   <ImagePlus size={13} />
                   {file ? file.name : 'Attach file'}
@@ -197,7 +197,7 @@ export function ReplyComposer({
               </div>
 
               {isLynxchan ? (
-                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border-soft bg-surface-2 p-3">
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border-soft bg-surface-2 p-3.5">
                   <div className="flex h-12 min-w-32 items-center justify-center overflow-hidden rounded-lg bg-surface-3">
                     {captchaLoading ? (
                       <Loader2 size={16} className="animate-spin text-ink-faint" />
@@ -218,7 +218,7 @@ export function ReplyComposer({
                   />
                 </div>
               ) : (
-                <div className="flex items-start gap-2.5 rounded-xl border border-border-soft bg-surface-2 p-3 text-xs text-ink-faint">
+                <div className="flex items-start gap-2.5 rounded-xl border border-border-soft bg-surface-2 p-3.5 text-xs text-ink-faint">
                   <KeyRound size={14} className="mt-0.5 shrink-0" />
                   <p>
                     {site.name} requires solving a verification challenge on their own site. We'll copy your comment to the
@@ -240,7 +240,7 @@ export function ReplyComposer({
 
               {error && <p className="text-xs text-red-400">{error}</p>}
 
-              <div className="flex justify-end gap-2 pt-1">
+              <div className="flex justify-end gap-2.5 pt-1.5">
                 <button
                   type="button"
                   onClick={() => {

@@ -45,8 +45,8 @@ export function OnboardingWizard() {
         </button>
       )}
 
-      <div className="w-full max-w-lg">
-        <div className="mb-6 flex items-center justify-center gap-1.5">
+      <div className="w-full max-w-xl">
+        <div className="mb-7 flex items-center justify-center gap-1.5">
           {STEPS.map((s, i) => (
             <span
               key={s}
@@ -58,7 +58,7 @@ export function OnboardingWizard() {
           ))}
         </div>
 
-        <div className="card overflow-hidden p-8" style={{ boxShadow: 'var(--shadow-lg)' }}>
+        <div className="card overflow-hidden p-9" style={{ boxShadow: 'var(--shadow-lg)' }}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={step}
@@ -110,7 +110,7 @@ function WelcomeStep() {
           one app.
         </p>
       </div>
-      <div className="grid w-full grid-cols-3 gap-2 pt-2 text-[11px] text-ink-faint">
+      <div className="grid w-full grid-cols-3 gap-2.5 pt-2 text-xs text-ink-faint">
         <Feature icon={LayoutGrid} label="Browse & switch sites" />
         <Feature icon={Bookmark} label="Bookmark threads" />
         <Feature icon={Reply} label="Reply & download" />
@@ -121,8 +121,8 @@ function WelcomeStep() {
 
 function Feature({ icon: Icon, label }: { icon: typeof LayoutGrid; label: string }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 rounded-xl bg-surface-3 px-2 py-3">
-      <Icon size={16} className="text-accent" />
+    <div className="flex flex-col items-center gap-1.5 rounded-xl bg-surface-3 px-2.5 py-3.5">
+      <Icon size={17} className="text-accent" />
       <span className="text-center leading-tight">{label}</span>
     </div>
   )
@@ -169,14 +169,14 @@ function ContentStep() {
             <p className="text-sm font-medium text-ink">Blur NSFW / spoiler thumbnails</p>
             <p className="mt-0.5 text-xs text-ink-faint">Blur images on 18+ sites and spoilered files until you tap to reveal.</p>
           </div>
-          <input type="checkbox" checked={blurNsfw} onChange={(e) => setBlurNsfw(e.target.checked)} className="size-4 shrink-0 accent-accent" />
+          <input type="checkbox" checked={blurNsfw} onChange={(e) => setBlurNsfw(e.target.checked)} className="size-5 shrink-0 accent-accent" />
         </label>
         <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-border-soft bg-surface-3 p-4">
           <div>
             <p className="text-sm font-medium text-ink">Hide 18+ sites from the site list</p>
             <p className="mt-0.5 text-xs text-ink-faint">Sites like 8kun and 8chan.moe stay out of the switcher until revealed.</p>
           </div>
-          <input type="checkbox" checked={hideNsfwSites} onChange={(e) => setHideNsfwSites(e.target.checked)} className="size-4 shrink-0 accent-accent" />
+          <input type="checkbox" checked={hideNsfwSites} onChange={(e) => setHideNsfwSites(e.target.checked)} className="size-5 shrink-0 accent-accent" />
         </label>
       </div>
     </div>
@@ -205,9 +205,9 @@ function DownloadsStep() {
             const dir = await pickDownloadDir(downloadDir ?? undefined)
             if (dir) await setDownloadDir(dir)
           }}
-          className="btn-secondary shrink-0 px-3 py-1.5 text-xs"
+          className="btn-secondary shrink-0 px-3.5 py-2 text-sm"
         >
-          <FolderOpen size={13} /> Choose…
+          <FolderOpen size={14} /> Choose…
         </button>
       </div>
     </div>

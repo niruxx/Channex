@@ -22,7 +22,7 @@ export function WindowControls() {
 
   if (mac) {
     return (
-      <div className="flex shrink-0 items-center gap-2 pl-1">
+      <div className="flex shrink-0 items-center gap-2.5 pl-1">
         <TrafficLight color="#ff5f57" onClick={() => appWindow.close()} />
         <TrafficLight color="#febc2e" onClick={() => appWindow.minimize()} />
         <TrafficLight color="#28c840" onClick={() => appWindow.toggleMaximize()} />
@@ -33,13 +33,13 @@ export function WindowControls() {
   return (
     <div className="flex shrink-0 items-center">
       <CtrlButton onClick={() => appWindow.minimize()} title="Minimize">
-        <Minus size={14} />
+        <Minus size={16} />
       </CtrlButton>
       <CtrlButton onClick={() => appWindow.toggleMaximize()} title={maximized ? 'Restore' : 'Maximize'}>
-        {maximized ? <Copy size={11} /> : <Square size={11} />}
+        {maximized ? <Copy size={13} /> : <Square size={13} />}
       </CtrlButton>
       <CtrlButton onClick={() => appWindow.close()} title="Close" danger>
-        <X size={14} />
+        <X size={16} />
       </CtrlButton>
     </div>
   )
@@ -62,7 +62,7 @@ function CtrlButton({
       onClick={onClick}
       title={title}
       className={cn(
-        'flex h-12 w-12 items-center justify-center text-ink-faint transition-colors',
+        'flex h-14 w-14 items-center justify-center text-ink-faint transition-colors',
         danger ? 'hover:bg-red-500 hover:text-white' : 'hover:bg-surface-3 hover:text-ink',
       )}
     >
@@ -76,7 +76,7 @@ function TrafficLight({ color, onClick }: { color: string; onClick: () => void }
     <button
       type="button"
       onClick={onClick}
-      className="group flex size-3.5 items-center justify-center rounded-full transition-transform active:scale-90"
+      className="group flex size-4 items-center justify-center rounded-full transition-transform active:scale-90"
       style={{ background: color }}
     />
   )

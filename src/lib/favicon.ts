@@ -9,6 +9,6 @@ export function faviconCandidates(site: ChanSite): string[] {
   }
   return [
     `${site.siteOrigin}/favicon.ico`,
-    `https://www.google.com/s2/favicons?sz=64&domain=${hostname}`,
+    `https://www.google.com/s2/favicons?sz=128&domain=${hostname}`,
   ]
 }
