@@ -130,6 +130,10 @@ npm install
 npm run tauri dev
 ```
 
+## AI usage disclaimer
+
+Parts of this project (code, documentation, and/or assets) were written or assisted by AI tools. Review changes accordingly.
+
 ---
 
 - niruxxdaboi -

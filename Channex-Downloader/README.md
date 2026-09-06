@@ -139,3 +139,7 @@ The compiled app and platform installer will be under `src-tauri/target/release/
   - `chan/` — thread-fetching logic per imageboard engine (4chan, lynxchan, vichan)
   - `downloader.rs` — concurrent file downloader with progress events
   - `settings.rs` — persisted user settings
+
+## AI usage disclaimer
+
+Parts of this project (code, documentation, and/or assets) were written or assisted by AI tools. Review changes accordingly.

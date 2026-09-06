@@ -35,3 +35,7 @@ npm run tauri dev
 ```
 
 The root `.gitignore` covers common editor/OS/build clutter (`node_modules/`, `dist/`, `src-tauri/target/`, `.vscode/`, `.idea/`, etc.) across both directories.
+
+## AI usage disclaimer
+
+Parts of this repository (code, documentation, and/or assets) were written or assisted by AI tools. Review changes accordingly.
