@@ -130,9 +130,19 @@ npm install
 npm run tauri dev
 ```
 
+## Qt6 rewrite (in progress)
+
+[`QT/`](QT/) holds an in-progress native Qt6/C++/QML rebuild of this app,
+aimed at eventual feature parity so it can replace this Tauri version.
+It's a placeholder for now — see [QT/README.md](QT/README.md) for
+architecture, current status, and known gaps.
+
 ## AI usage disclaimer
 
-Parts of this project (code, documentation, and/or assets) were written or assisted by AI tools. Review changes accordingly.
+> [!NOTE]
+> Parts of Channex's — code, documentation, and this README included — were
+> written with the help of AI coding assistants. Everything is reviewed before
+> it ships, but if you spot something that looks off, please open an issue.
 
 ---
 
