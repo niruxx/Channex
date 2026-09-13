@@ -56,6 +56,10 @@ qt_add_executable(channex_qt
     src/posting/ExternalReply.cpp
     src/navigation/NavigationController.h
     src/navigation/NavigationController.cpp
+    src/navigation/WindowDragState.h
+    src/navigation/WindowDragState.cpp
+    src/icons/IconProvider.h
+    src/icons/IconProvider.cpp
 )
 
 qt_add_qml_module(channex_qt
@@ -71,6 +75,7 @@ qt_add_qml_module(channex_qt
         qml/components/Sidebar.qml
         qml/components/SiteSwitcher.qml
         qml/components/AddSiteDialog.qml
+        qml/components/DownloadSelectionDialog.qml
         qml/components/BoardList.qml
         qml/components/AnimatedBackground.qml
         qml/components/ThreadCard.qml
@@ -81,6 +86,7 @@ qt_add_qml_module(channex_qt
         qml/components/AppTextArea.qml
         qml/components/AppComboBox.qml
         qml/components/AppCheckBox.qml
+        qml/components/AppIcon.qml
         qml/views/CatalogView.qml
         qml/views/ThreadView.qml
         qml/views/PostCard.qml
@@ -91,10 +97,33 @@ qt_add_qml_module(channex_qt
         qml/views/OnboardingWizard.qml
     RESOURCES
         resources/icons/app.svg
+        resources/icons/ui/grid.svg
+        resources/icons/ui/rows.svg
+        resources/icons/ui/list.svg
+        resources/icons/ui/search.svg
+        resources/icons/ui/refresh.svg
+        resources/icons/ui/chevron-left.svg
+        resources/icons/ui/chevron-right.svg
+        resources/icons/ui/x.svg
+        resources/icons/ui/minus.svg
+        resources/icons/ui/square.svg
+        resources/icons/ui/copy.svg
+        resources/icons/ui/bookmark.svg
+        resources/icons/ui/bookmark-fill.svg
+        resources/icons/ui/download.svg
+        resources/icons/ui/gear.svg
+        resources/icons/ui/plus.svg
+        resources/icons/ui/zoom-in.svg
+        resources/icons/ui/play.svg
+        resources/icons/ui/folder.svg
+        resources/icons/ui/pause.svg
+        resources/icons/ui/volume.svg
+        resources/icons/ui/volume-mute.svg
+        resources/icons/ui/check.svg
 )
 
 set_target_properties(channex_qt PROPERTIES
-    WIN32_EXECUTABLE OFF
+    WIN32_EXECUTABLE ON
     MACOSX_BUNDLE ON
 )
 
@@ -108,6 +137,7 @@ target_include_directories(channex_qt PRIVATE
     src/bookmarks
     src/catalog
     src/downloads
+    src/icons
     src/lightbox
     src/navigation
     src/network

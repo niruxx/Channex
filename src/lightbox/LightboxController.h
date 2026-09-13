@@ -49,6 +49,7 @@ public:
     Q_INVOKABLE void close();
     Q_INVOKABLE void next();
     Q_INVOKABLE void prev();
+    Q_INVOKABLE void goTo(int index);
 
 signals:
     void isOpenChanged();

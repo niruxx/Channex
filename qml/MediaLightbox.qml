@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls.Basic
+import QtQuick.Layouts
 import QtMultimedia
 import Channex
 import "components"
@@ -21,6 +22,14 @@ Item {
     readonly property var file: LightboxController.currentFile
     readonly property bool isVideo: file.isVideo === true
     property real dragStartX: 0
+
+    function formatTime(ms) {
+        if (!ms || ms <= 0 || isNaN(ms)) return "0:00"
+        const totalSeconds = Math.floor(ms / 1000)
+        const minutes = Math.floor(totalSeconds / 60)
+        const seconds = totalSeconds % 60
+        return minutes + ":" + (seconds < 10 ? "0" : "") + seconds
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -80,6 +89,7 @@ Item {
 
     // Video branch
     Item {
+        id: videoBranch
         anchors.fill: parent
         anchors.margins: 40
         visible: root.isVideo
@@ -89,13 +99,96 @@ Item {
             source: root.isVideo ? (root.file.url || "") : ""
             videoOutput: videoOutput
             loops: MediaPlayer.Infinite
-            audioOutput: AudioOutput { muted: SettingsManager.muteWebmsByDefault; volume: 1.0 }
+            audioOutput: AudioOutput { id: audioOutput; muted: SettingsManager.muteWebmsByDefault; volume: 1.0 }
             onSourceChanged: if (root.isVideo) play()
         }
 
         VideoOutput {
             id: videoOutput
             anchors.fill: parent
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: player.playbackState === MediaPlayer.PlayingState ? player.pause() : player.play()
+            }
+        }
+
+        Rectangle {
+            id: videoControls
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: 10
+            height: 44
+            radius: Theme.radiusMd
+            color: "#000000b0"
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 10
+                anchors.rightMargin: 10
+                spacing: 10
+
+                AppButton {
+                    flat: true
+                    iconName: player.playbackState === MediaPlayer.PlayingState ? "pause" : "play"
+                    onClicked: player.playbackState === MediaPlayer.PlayingState ? player.pause() : player.play()
+                }
+
+                Text {
+                    text: root.formatTime(player.position)
+                    color: "white"
+                    font.pixelSize: 11
+                }
+
+                Slider {
+                    id: seekSlider
+                    Layout.fillWidth: true
+                    from: 0
+                    to: Math.max(player.duration, 1)
+                    onPressedChanged: if (!pressed) player.setPosition(value)
+
+                    Connections {
+                        target: player
+                        function onPositionChanged() {
+                            if (!seekSlider.pressed) seekSlider.value = player.position
+                        }
+                    }
+
+                    background: Rectangle {
+                        x: seekSlider.leftPadding
+                        y: seekSlider.topPadding + seekSlider.availableHeight / 2 - height / 2
+                        width: seekSlider.availableWidth
+                        height: 4
+                        radius: 2
+                        color: "#ffffff33"
+                        Rectangle {
+                            width: seekSlider.visualPosition * parent.width
+                            height: parent.height
+                            radius: 2
+                            color: Theme.accent
+                        }
+                    }
+                    handle: Rectangle {
+                        x: seekSlider.leftPadding + seekSlider.visualPosition * (seekSlider.availableWidth - width)
+                        y: seekSlider.topPadding + seekSlider.availableHeight / 2 - height / 2
+                        width: 12; height: 12; radius: 6
+                        color: Theme.accent
+                    }
+                }
+
+                Text {
+                    text: root.formatTime(player.duration)
+                    color: "white"
+                    font.pixelSize: 11
+                }
+
+                AppButton {
+                    flat: true
+                    iconName: audioOutput.muted ? "volume-mute" : "volume"
+                    onClicked: audioOutput.muted = !audioOutput.muted
+                }
+            }
         }
     }
 
@@ -114,8 +207,7 @@ Item {
 
     // Nav arrows
     AppButton {
-        text: "‹"
-        font.pixelSize: 18
+        iconName: "chevron-left"
         visible: LightboxController.files.length > 1
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
@@ -123,8 +215,7 @@ Item {
         onClicked: LightboxController.prev()
     }
     AppButton {
-        text: "›"
-        font.pixelSize: 18
+        iconName: "chevron-right"
         visible: LightboxController.files.length > 1
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
@@ -132,18 +223,60 @@ Item {
         onClicked: LightboxController.next()
     }
 
-    // Dot indicator
-    Row {
+    // Thumbnail filmstrip - every other file in the thread, click to jump
+    ListView {
+        id: filmstrip
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottomMargin: 84
-        spacing: 6
+        width: Math.min(parent.width - 40, contentWidth)
+        height: 56
+        orientation: ListView.Horizontal
+        spacing: 8
         visible: LightboxController.files.length > 1
-        Repeater {
-            model: LightboxController.files.length
-            delegate: Rectangle {
-                width: 6; height: 6; radius: 3
-                color: index === LightboxController.index ? Theme.accent : "#666"
+        model: LightboxController.files
+        clip: true
+
+        onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+        currentIndex: LightboxController.index
+
+        delegate: Rectangle {
+            id: thumbDelegate
+            readonly property bool current: index === LightboxController.index
+            width: 56; height: 56
+            radius: Theme.radiusSm
+            color: Theme.surface3
+            border.width: current ? 2 : 0
+            border.color: Theme.accent
+            clip: true
+            scale: current ? 1.0 : 0.92
+            opacity: current ? 1.0 : 0.6
+
+            Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: 140 } }
+            Behavior on border.color { ColorAnimation { duration: 140 } }
+
+            Image {
+                anchors.fill: parent
+                anchors.margins: thumbDelegate.current ? 0 : 2
+                source: modelData.thumbUrl || ""
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+            }
+
+            AppIcon {
+                visible: modelData.isVideo === true
+                anchors.centerIn: parent
+                name: "play"
+                iconSize: 14
+                color: "white"
+                opacity: 0.9
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: LightboxController.goTo(index)
             }
         }
     }
@@ -156,18 +289,21 @@ Item {
         spacing: 8
 
         AppButton {
-            text: "＋ Queue"
+            text: "Queue"
+            iconName: "plus"
             onClicked: DownloadManager.startJob("lightbox", SettingsManager.downloadDir.length ? SettingsManager.downloadDir : ".",
                 [{ url: root.file.url || "", fileName: root.file.name || "file" }])
         }
         AppButton {
             text: "Save to disk"
+            iconName: "download"
+            checked: true
             onClicked: DownloadManager.startJob("lightbox-save", SettingsManager.downloadDir.length ? SettingsManager.downloadDir : ".",
                 [{ url: root.file.url || "", fileName: root.file.name || "file" }])
         }
         AppButton {
-            text: "Close"
-            checked: true
+            iconName: "x"
+            flat: true
             onClicked: LightboxController.close()
         }
     }

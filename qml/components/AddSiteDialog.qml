@@ -5,12 +5,35 @@ import Channex
 
 // Mirrors src/components/sites/AddSiteDialog.tsx: form for
 // SitesController.addCustomSite() (see makeCustomSite() upstream).
+//
+// Popup/Dialog positioning isn't governed by normal anchoring - anchors
+// on a Dialog resolve against whatever ambiguous "parent" it happened to
+// inherit, which is what caused it to render cropped near the top-right
+// corner instead of centered. Parenting explicitly to the window's
+// Overlay.overlay and computing x/y from *its* width/height is the
+// standard fix.
 Dialog {
     id: root
     modal: true
-    anchors.centerIn: parent
+    parent: Overlay.overlay
+    x: Math.round((parent.width - width) / 2)
+    y: Math.round((parent.height - height) / 2)
     width: 420
     title: "Add a site"
+
+    enter: Transition {
+        NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
+        NumberAnimation { properties: "scale"; from: 0.92; to: 1; duration: 160; easing.type: Easing.OutCubic }
+    }
+    exit: Transition {
+        NumberAnimation { properties: "opacity"; from: 1; to: 0; duration: 120; easing.type: Easing.InCubic }
+        NumberAnimation { properties: "scale"; from: 1; to: 0.92; duration: 120; easing.type: Easing.InCubic }
+    }
+
+    Overlay.modal: Rectangle {
+        color: "#00000099"
+        Behavior on opacity { NumberAnimation { duration: 160 } }
+    }
 
     background: Rectangle { color: Theme.surface; radius: Theme.radiusLg; border.color: Theme.border }
 

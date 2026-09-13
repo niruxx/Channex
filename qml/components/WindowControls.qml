@@ -44,27 +44,35 @@ Row {
         }
     }
 
+    // Modern, non-blocky treatment: round hover pills with gaps between
+    // them, instead of the old flush rectangular hit-boxes that read as
+    // one solid square bar.
     Component {
         id: winControls
         Row {
-            spacing: 0
+            spacing: 6
             Repeater {
                 model: [
-                    { glyph: "−", action: "minimize", danger: false },
-                    { glyph: root.targetWindow.visibility === Window.Maximized ? "⧉" : "□", action: "maximize", danger: false },
-                    { glyph: "✕", action: "close", danger: true },
+                    { icon: "minus", action: "minimize", danger: false },
+                    { icon: root.targetWindow.visibility === Window.Maximized ? "copy" : "square", action: "maximize", danger: false },
+                    { icon: "x", action: "close", danger: true },
                 ]
                 delegate: Rectangle {
-                    width: 46; height: 32
+                    width: 32; height: 32; radius: 16
                     color: hover.hovered ? (modelData.danger ? Theme.danger : Theme.surface3) : "transparent"
-                    Text {
+                    scale: mouse.pressed ? 0.88 : 1.0
+                    Behavior on color { ColorAnimation { duration: 100 } }
+                    Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+
+                    AppIcon {
                         anchors.centerIn: parent
-                        text: modelData.glyph
+                        name: modelData.icon
+                        iconSize: 11
                         color: hover.hovered && modelData.danger ? "white" : Theme.ink
-                        font.pixelSize: 13
                     }
                     HoverHandler { id: hover }
                     MouseArea {
+                        id: mouse
                         anchors.fill: parent
                         onClicked: {
                             if (modelData.action === "close") root.targetWindow.close()

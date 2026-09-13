@@ -78,33 +78,48 @@ ApplicationWindow {
 
                     CatalogView {
                         anchors.fill: parent
-                        opacity: NavigationController.view === "catalog" ? 1 : 0
+                        readonly property bool active: NavigationController.view === "catalog"
+                        opacity: active ? 1 : 0
+                        scale: active ? 1 : 0.985
                         visible: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                     }
                     ThreadView {
                         anchors.fill: parent
-                        opacity: NavigationController.view === "thread" ? 1 : 0
+                        readonly property bool active: NavigationController.view === "thread"
+                        opacity: active ? 1 : 0
+                        scale: active ? 1 : 0.985
                         visible: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                     }
                     BookmarksView {
                         anchors.fill: parent
-                        opacity: NavigationController.view === "bookmarks" ? 1 : 0
+                        readonly property bool active: NavigationController.view === "bookmarks"
+                        opacity: active ? 1 : 0
+                        scale: active ? 1 : 0.985
                         visible: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                     }
                     DownloadsView {
                         anchors.fill: parent
-                        opacity: NavigationController.view === "downloads" ? 1 : 0
+                        readonly property bool active: NavigationController.view === "downloads"
+                        opacity: active ? 1 : 0
+                        scale: active ? 1 : 0.985
                         visible: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                     }
                     SettingsView {
                         anchors.fill: parent
-                        opacity: NavigationController.view === "settings" ? 1 : 0
+                        readonly property bool active: NavigationController.view === "settings"
+                        opacity: active ? 1 : 0
+                        scale: active ? 1 : 0.985
                         visible: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                     }
                 }
             }

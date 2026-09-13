@@ -2,6 +2,8 @@
 #include "../adapters/AdapterFactory.h"
 #include "../settings/SettingsManager.h"
 
+#include <QRegularExpression>
+#include <QUrl>
 #include <algorithm>
 
 namespace {
@@ -215,4 +217,42 @@ void SitesController::removeCustomSite(const QString &id)
     }
     SettingsManager::instance()->setCustomSites(list);
     emit sitesChanged();
+}
+
+QVariantMap SitesController::resolveThreadUrl(const QString &url) const
+{
+    const QUrl parsed(url.trimmed(), QUrl::StrictMode);
+    if (!parsed.isValid() || parsed.host().isEmpty())
+        return {};
+
+    const QString path = parsed.path();
+
+    // 4chan-style: /<board>/thread/<id>(/optional-slug)(#p...)
+    static const QRegularExpression threadRe(QStringLiteral("^/([^/]+)/thread/(\\d+)"));
+    // vichan/Lainchan/LynxChan-style: /<board>/res/<id>.html(#...)
+    static const QRegularExpression resRe(QStringLiteral("^/([^/]+)/res/(\\d+)\\.html"));
+
+    QString boardCode, threadId;
+    if (const auto m = threadRe.match(path); m.hasMatch()) {
+        boardCode = m.captured(1);
+        threadId = m.captured(2);
+    } else if (const auto m2 = resRe.match(path); m2.hasMatch()) {
+        boardCode = m2.captured(1);
+        threadId = m2.captured(2);
+    } else {
+        return {};
+    }
+
+    for (const auto &v : sites()) {
+        const auto site = v.toMap();
+        const QUrl siteOrigin(site.value("siteOrigin").toString());
+        if (siteOrigin.host().compare(parsed.host(), Qt::CaseInsensitive) == 0) {
+            QVariantMap result;
+            result["siteId"] = site.value("id");
+            result["boardCode"] = boardCode;
+            result["threadId"] = threadId;
+            return result;
+        }
+    }
+    return {};
 }

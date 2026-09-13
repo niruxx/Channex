@@ -10,10 +10,28 @@ RowLayout {
     spacing: 8
 
     AppTextField {
+        id: searchField
         Layout.fillWidth: true
-        placeholderText: "Search this board…"
+        placeholderText: "Search this board… or paste a thread link"
         text: root.controller.searchQuery
         onTextEdited: root.controller.searchQuery = text
+        leftIcon: "search"
+
+        // Paste a thread URL (4chan "/board/thread/id" or vichan/
+        // LynxChan "/board/res/id.html") and hit Enter to jump straight
+        // to it, instead of it just filtering the current board's
+        // catalog. Only acts when the text resolves against a site
+        // that's already registered (preset or custom) - anything else
+        // is left alone as a normal search term.
+        onAccepted: {
+            const resolved = SitesController.resolveThreadUrl(text)
+            if (resolved && resolved.threadId) {
+                SitesController.currentSiteId = resolved.siteId
+                NavigationController.goThread(resolved.siteId, resolved.boardCode, resolved.threadId)
+                text = ""
+                root.controller.searchQuery = ""
+            }
+        }
     }
 
     AppComboBox {
@@ -28,9 +46,9 @@ RowLayout {
         spacing: 2
         Repeater {
             model: [
-                { mode: "grid", glyph: "▦" },
-                { mode: "compact", glyph: "▤" },
-                { mode: "list", glyph: "☰" },
+                { mode: "grid", icon: "grid" },
+                { mode: "compact", icon: "rows" },
+                { mode: "list", icon: "list" },
             ]
             delegate: Rectangle {
                 width: 32; height: 32; radius: Theme.radiusSm
@@ -39,10 +57,12 @@ RowLayout {
 
                 Behavior on color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
 
-                Text {
+                AppIcon {
                     anchors.centerIn: parent
-                    text: modelData.glyph
+                    name: modelData.icon
+                    iconSize: 16
                     color: parent.current ? Theme.accent : Theme.ink
+                    Behavior on color { ColorAnimation { duration: 120 } }
                 }
                 HoverHandler { id: modeHover }
                 MouseArea { anchors.fill: parent; onClicked: SettingsManager.catalogViewMode = modelData.mode }
@@ -51,8 +71,8 @@ RowLayout {
     }
 
     AppButton {
-        text: "⟳"
         flat: true
+        iconName: "refresh"
         onClicked: root.controller.reload()
     }
 }

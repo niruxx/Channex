@@ -32,12 +32,86 @@ Rectangle {
     // Drag region - sits behind the interactive controls (they're
     // instantiated after this in the RowLayout below, so they win
     // Z-order/hit-testing by default).
+    //
+    // Moves the window manually (tracking mouse deltas) instead of
+    // calling startSystemMove(): that enters a native Win32 modal
+    // move-loop which desyncs from Qt Quick's threaded render loop and
+    // makes the whole window stutter while being dragged. Tracking the
+    // drag ourselves stays inside Qt's normal event loop, so dragging
+    // can be smooth AND the app can keep the default threaded render
+    // loop (better overall animation smoothness - see main.cpp) instead
+    // of forcing the slower basic loop just to work around that.
+    //
+    // Two things were still causing glitching on longer/faster drags
+    // even after an earlier Qt.callLater-based throttle:
+    //
+    // 1. Qt.callLater only coalesces calls that land within the same
+    //    event-loop tick. Under sustained fast mouse movement, native
+    //    move events can arrive spread across many ticks rather than
+    //    bursts within one, so that throttle wasn't actually capping
+    //    the update rate the way a real frame budget would. Replaced
+    //    with a fixed ~60Hz Timer: onPositionChanged only ever updates
+    //    a *target* position (cheap), and the Timer is what actually
+    //    calls QWindow::setX/setY (a native SetWindowPos on Windows),
+    //    at most once per tick no matter how fast the mouse reports.
+    //
+    // 2. AnimatedBackground keeps animating continuously underneath
+    //    everything (aurora/particles/grid), and moving the window is
+    //    already asking the render thread + DWM to do extra work every
+    //    frame - the longer the drag, the more accumulated frames were
+    //    competing for the same GPU time as those animations. Toggling
+    //    WindowDragState.active pauses them for the duration of the
+    //    drag (see AnimatedBackground.qml).
     MouseArea {
+        id: dragArea
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
-        onPressed: root.targetWindow.startSystemMove()
-        onDoubleClicked: root.targetWindow.visibility === Window.Maximized
-            ? root.targetWindow.showNormal() : root.targetWindow.showMaximized()
+        property point pressGlobal: Qt.point(0, 0)
+        property point windowStartPos: Qt.point(0, 0)
+        property real pendingX: 0
+        property real pendingY: 0
+
+        function endDrag() {
+            moveTimer.stop()
+            WindowDragState.active = false
+        }
+
+        onPressed: (mouse) => {
+            pressGlobal = mapToGlobal(mouse.x, mouse.y)
+            windowStartPos = Qt.point(root.targetWindow.x, root.targetWindow.y)
+            pendingX = windowStartPos.x
+            pendingY = windowStartPos.y
+            WindowDragState.active = true
+            moveTimer.start()
+        }
+        onPositionChanged: (mouse) => {
+            if (pressed && root.targetWindow.visibility !== Window.Maximized) {
+                const g = mapToGlobal(mouse.x, mouse.y)
+                pendingX = windowStartPos.x + (g.x - pressGlobal.x)
+                pendingY = windowStartPos.y + (g.y - pressGlobal.y)
+            }
+        }
+        onReleased: {
+            endDrag()
+            root.targetWindow.x = pendingX
+            root.targetWindow.y = pendingY
+        }
+        onCanceled: endDrag()
+        onDoubleClicked: {
+            endDrag()
+            root.targetWindow.visibility === Window.Maximized
+                ? root.targetWindow.showNormal() : root.targetWindow.showMaximized()
+        }
+
+        Timer {
+            id: moveTimer
+            interval: 16
+            repeat: true
+            onTriggered: {
+                root.targetWindow.x = dragArea.pendingX
+                root.targetWindow.y = dragArea.pendingY
+            }
+        }
     }
 
     RowLayout {
@@ -50,10 +124,10 @@ Rectangle {
 
         AppButton {
             flat: true
+            iconName: "chevron-left"
             enabled: NavigationController.canGoBack
             opacity: enabled ? 1 : 0.35
-            text: "‹"
-            font.pixelSize: 18
+            Behavior on opacity { NumberAnimation { duration: 120 } }
             onClicked: NavigationController.back()
         }
 

@@ -65,10 +65,28 @@ Item {
                 id: gridView
                 anchors.fill: parent
                 anchors.margins: 12
-                visible: NavigationController.boardCode && SettingsManager.catalogViewMode !== "list" && !controller.loading
+                // visible is intentionally NOT gated on controller.loading:
+                // that used to hard-cut the view invisible for the whole
+                // reload (board switch or a mode-switch that raced a
+                // reload), which meant the opacity/scale Behaviors below
+                // ran to completion while nothing was on screen to show
+                // them - so the view would just "pop" in fully faded-in
+                // the instant loading cleared, instead of visibly
+                // animating. The BusyIndicator overlay communicates
+                // loading instead; stale content staying up underneath it
+                // is normal, non-jarring behavior.
+                readonly property bool modeActive: SettingsManager.catalogViewMode !== "list"
+                opacity: modeActive ? 1 : 0
+                scale: modeActive ? 1 : 0.985
+                visible: opacity > 0 && NavigationController.boardCode
+                Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                 model: controller
                 cellWidth: SettingsManager.catalogViewMode === "compact" ? 160 : 232
-                cellHeight: SettingsManager.catalogViewMode === "compact" ? 190 : 300
+                // Tall enough for a full-width-square thumbnail plus subject
+                // + (grid only) a 3-line excerpt + the reply/image counts
+                // row without clipping into the row below - see ThreadCard.
+                cellHeight: SettingsManager.catalogViewMode === "compact" ? 210 : 340
                 clip: true
 
                 delegate: Item {
@@ -90,7 +108,12 @@ Item {
                 anchors.margins: 12
                 spacing: 8
                 clip: true
-                visible: NavigationController.boardCode && SettingsManager.catalogViewMode === "list" && !controller.loading
+                readonly property bool modeActive: SettingsManager.catalogViewMode === "list"
+                opacity: modeActive ? 1 : 0
+                scale: modeActive ? 1 : 0.985
+                visible: opacity > 0 && NavigationController.boardCode
+                Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                 model: controller
 
                 delegate: Item {

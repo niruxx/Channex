@@ -31,12 +31,19 @@ Item {
                 x: baseX
                 y: baseY
 
+                // Paused while the window is being dragged (see
+                // TitleBar.qml / WindowDragState) - one less thing
+                // competing with the render thread for GPU time while
+                // the window itself is also being repositioned every
+                // frame.
                 SequentialAnimation on x {
+                    running: !WindowDragState.active
                     loops: Animation.Infinite
                     NumberAnimation { to: blob.baseX + 80; duration: 9000 + index * 4000; easing.type: Easing.InOutSine }
                     NumberAnimation { to: blob.baseX - 60; duration: 9000 + index * 4000; easing.type: Easing.InOutSine }
                 }
                 SequentialAnimation on y {
+                    running: !WindowDragState.active
                     loops: Animation.Infinite
                     NumberAnimation { to: blob.baseY - 60; duration: 11000 + index * 3000; easing.type: Easing.InOutSine }
                     NumberAnimation { to: blob.baseY + 80; duration: 11000 + index * 3000; easing.type: Easing.InOutSine }
@@ -49,8 +56,8 @@ Item {
     ParticleSystem {
         id: particleSystem
         anchors.fill: parent
-        running: SettingsManager.backgroundTheme === "particles"
-        visible: running
+        running: SettingsManager.backgroundTheme === "particles" && !WindowDragState.active
+        visible: SettingsManager.backgroundTheme === "particles"
 
         ItemParticle {
             delegate: Rectangle {
@@ -79,7 +86,7 @@ Item {
         property real offset: 0
 
         NumberAnimation on offset {
-            running: gridCanvas.visible
+            running: gridCanvas.visible && !WindowDragState.active
             loops: Animation.Infinite
             from: 0; to: 42
             duration: 8000

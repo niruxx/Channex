@@ -14,6 +14,7 @@ Rectangle {
     radius: Theme.radiusMd
     color: cardHover.hovered ? Theme.surface3 : Theme.surface2
     border.color: cardHover.hovered ? Theme.border : Theme.borderSoft
+    clip: true
 
     Behavior on color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
     Behavior on border.color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
@@ -92,7 +93,12 @@ Rectangle {
 
                 Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
-                Text { anchors.centerIn: parent; text: "★"; font.pixelSize: 11; color: root.bookmarked ? "#0c0e11" : "white" }
+                AppIcon {
+                    anchors.centerIn: parent
+                    name: root.bookmarked ? "bookmark-fill" : "bookmark"
+                    iconSize: 12
+                    color: root.bookmarked ? "#0c0e11" : "white"
+                }
                 MouseArea {
                     anchors.fill: parent
                     onClicked: BookmarksController.toggle({

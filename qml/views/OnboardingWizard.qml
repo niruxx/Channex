@@ -47,9 +47,11 @@ Rectangle {
             }
 
             ColumnLayout {
+                Layout.fillWidth: true
                 spacing: 10
-                Text { text: "Appearance"; color: Theme.ink; font.bold: true; font.pixelSize: 16 }
+                Text { Layout.alignment: Qt.AlignHCenter; text: "Appearance"; color: Theme.ink; font.bold: true; font.pixelSize: 16 }
                 RowLayout {
+                    Layout.alignment: Qt.AlignHCenter
                     spacing: 6
                     Repeater {
                         model: ["dark", "light", "system"]
@@ -57,6 +59,7 @@ Rectangle {
                     }
                 }
                 Row {
+                    Layout.alignment: Qt.AlignHCenter
                     spacing: 8
                     Repeater {
                         model: Theme.accentPresets
@@ -70,6 +73,7 @@ Rectangle {
                     }
                 }
                 RowLayout {
+                    Layout.alignment: Qt.AlignHCenter
                     spacing: 6
                     Repeater {
                         model: ["none", "aurora", "particles", "grid"]
@@ -79,19 +83,27 @@ Rectangle {
             }
 
             ColumnLayout {
+                Layout.fillWidth: true
                 spacing: 10
-                Text { text: "Content"; color: Theme.ink; font.bold: true; font.pixelSize: 16 }
-                AppCheckBox { text: "Blur NSFW thumbnails and spoilers"; checked: SettingsManager.blurNsfw; onToggled: SettingsManager.blurNsfw = checked }
-                AppCheckBox { text: "Hide NSFW sites from the switcher"; checked: SettingsManager.hideNsfwSites; onToggled: SettingsManager.hideNsfwSites = checked }
+                Text { Layout.alignment: Qt.AlignHCenter; text: "Content"; color: Theme.ink; font.bold: true; font.pixelSize: 16 }
+                AppCheckBox { Layout.alignment: Qt.AlignHCenter; text: "Blur NSFW thumbnails and spoilers"; checked: SettingsManager.blurNsfw; onToggled: SettingsManager.blurNsfw = checked }
+                AppCheckBox { Layout.alignment: Qt.AlignHCenter; text: "Hide NSFW sites from the switcher"; checked: SettingsManager.hideNsfwSites; onToggled: SettingsManager.hideNsfwSites = checked }
             }
 
             ColumnLayout {
+                Layout.fillWidth: true
                 spacing: 10
-                Text { text: "Downloads"; color: Theme.ink; font.bold: true; font.pixelSize: 16 }
-                Text { color: Theme.inkDim; wrapMode: Text.WordWrap; Layout.fillWidth: true; text: "Pick a default download folder (optional - you can skip this and set it later in Settings)." }
+                Text { Layout.alignment: Qt.AlignHCenter; text: "Downloads"; color: Theme.ink; font.bold: true; font.pixelSize: 16 }
+                Text {
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    color: Theme.inkDim
+                    text: "Pick a default download folder (optional - you can skip this and set it later in Settings)."
+                }
                 RowLayout {
+                    Layout.alignment: Qt.AlignHCenter
                     Text {
-                        Layout.fillWidth: true
                         color: Theme.inkDim
                         elide: Text.ElideMiddle
                         text: SettingsManager.downloadDir.length ? SettingsManager.downloadDir : "No folder chosen"

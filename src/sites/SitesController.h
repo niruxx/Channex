@@ -43,6 +43,15 @@ public:
     Q_INVOKABLE void addCustomSite(const QVariantMap &input);
     Q_INVOKABLE void removeCustomSite(const QString &id);
 
+    // Parses a thread URL (4chan-style "/<board>/thread/<id>" or
+    // vichan/LynxChan-style "/<board>/res/<id>.html") and matches its
+    // host against an already-registered site's siteOrigin. Returns
+    // {siteId, boardCode, threadId} on success, or an empty map if the
+    // text isn't a recognizable thread URL or its host isn't a known
+    // site - used to let pasting a thread link into the catalog search
+    // field jump straight to that thread (see CatalogToolbar.qml).
+    Q_INVOKABLE QVariantMap resolveThreadUrl(const QString &url) const;
+
 signals:
     void sitesChanged();
     void currentSiteIdChanged();

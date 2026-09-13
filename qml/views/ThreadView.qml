@@ -54,7 +54,7 @@ Item {
             }
 
             AppButton {
-                text: root.bookmarked ? "★ Bookmarked" : "☆ Bookmark"
+                text: root.bookmarked ? "Bookmarked" : "Bookmark"
                 flat: true
                 checked: root.bookmarked
                 onClicked: BookmarksController.toggle({
@@ -65,26 +65,22 @@ Item {
             }
 
             AppButton {
-                text: "Download all (" + controller.allFiles.length + ")"
+                text: "Download (" + controller.allFiles.length + ")"
+                iconName: "download"
                 enabled: controller.allFiles.length > 0
                 flat: true
                 onClicked: {
-                    var files = []
-                    for (var i = 0; i < controller.allFiles.length; i++) {
-                        var f = controller.allFiles[i]
-                        files.push({ url: f.url, fileName: f.name })
-                    }
                     var destBase = SettingsManager.downloadDir.length ? SettingsManager.downloadDir : "."
-                    DownloadManager.startJob(
-                        NavigationController.siteId + "-" + NavigationController.boardCode + "-" + NavigationController.threadId,
-                        destBase + "/" + NavigationController.siteId + "-" + NavigationController.boardCode + "-" + NavigationController.threadId,
-                        files)
+                    var jobLabel = NavigationController.siteId + "-" + NavigationController.boardCode + "-" + NavigationController.threadId
+                    downloadDialog.openWithFiles(controller.allFiles, jobLabel, destBase + "/" + jobLabel)
                 }
             }
 
             AppButton { text: "Open in browser"; flat: true; onClicked: ExternalReply.openUrl(controller.threadWebUrl) }
-            AppButton { text: "⟳"; flat: true; onClicked: controller.reload() }
+            AppButton { iconName: "refresh"; flat: true; onClicked: controller.reload() }
         }
+
+        DownloadSelectionDialog { id: downloadDialog }
 
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderSoft }
 
@@ -117,6 +113,13 @@ Item {
                     onQuoteClicked: (postId) => {
                         var row = controller.rowForPostId(postId)
                         if (row >= 0) postList.positionViewAtIndex(row, ListView.Center)
+                    }
+                    onFileOpenRequested: (url) => {
+                        var all = controller.allFiles
+                        var idx = 0
+                        for (var i = 0; i < all.length; i++)
+                            if (all[i].url === url) { idx = i; break }
+                        LightboxController.open(all, idx)
                     }
                 }
             }

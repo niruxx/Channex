@@ -12,6 +12,7 @@ Rectangle {
     radius: Theme.radiusMd
     color: rowHover.hovered ? Theme.surface3 : Theme.surface2
     border.color: rowHover.hovered ? Theme.border : Theme.borderSoft
+    clip: true
 
     Behavior on color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
     Behavior on border.color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }

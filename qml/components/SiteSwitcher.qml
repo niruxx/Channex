@@ -84,8 +84,8 @@ ColumnLayout {
             color: "transparent"
             border.width: 1
             border.color: Theme.border
-            Text { anchors.centerIn: parent; text: "+"; color: Theme.inkDim; font.pixelSize: 16 }
-            MouseArea { anchors.fill: parent; onClicked: addSiteDialog.open() }
+            AppIcon { anchors.centerIn: parent; name: "plus"; iconSize: 15; color: Theme.inkDim }
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: addSiteDialog.open() }
         }
     }
 

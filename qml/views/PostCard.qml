@@ -15,6 +15,7 @@ Rectangle {
     property string postId: post.id !== undefined ? String(post.id) : ""
 
     signal quoteClicked(string postId)
+    signal fileOpenRequested(string url)
 
     radius: Theme.radiusMd
     color: post.isOp ? Theme.surface2 : Theme.surface
@@ -127,10 +128,7 @@ Rectangle {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (shouldBlur) { revealed = true; return }
-                                var idx = 0
-                                for (var i = 0; i < (post.files || []).length; i++)
-                                    if (post.files[i] === modelData) idx = i
-                                LightboxController.open(post.files, idx)
+                                root.fileOpenRequested(modelData.url)
                             }
                         }
                     }

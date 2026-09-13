@@ -92,6 +92,16 @@ void LightboxController::prev()
     loadCurrent();
 }
 
+void LightboxController::goTo(int index)
+{
+    if (m_files.isEmpty() || index < 0 || index >= m_files.size() || index == m_index) return;
+    m_index = index;
+    m_zoomed = false;
+    emit indexChanged();
+    emit zoomedChanged();
+    loadCurrent();
+}
+
 void LightboxController::loadCurrent()
 {
     const auto file = currentFile();
