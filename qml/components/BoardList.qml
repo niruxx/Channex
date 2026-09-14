@@ -8,7 +8,13 @@ import Channex
 ListView {
     id: root
     clip: true
-    model: SitesController.currentBoards
+
+    // Reads SettingsManager.hiddenBoards directly (a real NOTIFYing
+    // property) rather than through a per-board invokable lookup, so
+    // this recomputes correctly whenever the Settings "Boards" section
+    // hides/shows something - see SettingsManager::setBoardHidden.
+    readonly property var hiddenForSite: SettingsManager.hiddenBoards[NavigationController.siteId] || []
+    model: SitesController.currentBoards.filter(function (b) { return hiddenForSite.indexOf(b.code) === -1 })
     spacing: 2
 
     populate: Transition {
@@ -21,8 +27,15 @@ ListView {
         NumberAnimation { properties: "y"; duration: 160; easing.type: Easing.OutCubic }
     }
 
+    // visible:false alone only hides the paint - the header still
+    // reserved its full implicit height (padded text, ~32px) in the
+    // list's layout even while not loading, showing up as a persistent
+    // gap between the site switcher and the first board. Collapsing
+    // height to 0 when hidden actually removes that reserved space.
     header: Column {
         width: root.width
+        height: SitesController.boardsLoading ? implicitHeight : 0
+        clip: true
         visible: SitesController.boardsLoading
         Text {
             text: "Loading boards…"
@@ -60,7 +73,50 @@ ListView {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: NavigationController.goCatalog(NavigationController.siteId, modelData.code)
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: (mouse) => {
+                if (mouse.button === Qt.RightButton) boardContextMenu.popup()
+                else NavigationController.goCatalog(NavigationController.siteId, modelData.code)
+            }
+        }
+
+        Menu {
+            id: boardContextMenu
+
+            enter: Transition {
+                NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 120; easing.type: Easing.OutCubic }
+            }
+            exit: Transition {
+                NumberAnimation { properties: "opacity"; from: 1; to: 0; duration: 90; easing.type: Easing.InCubic }
+            }
+
+            background: Rectangle {
+                implicitWidth: 190
+                color: Theme.surface2
+                border.width: 1
+                border.color: Theme.border
+                radius: Theme.radiusSm
+                CardShadow { anchors.fill: parent; radius: Theme.radiusSm }
+            }
+
+            MenuItem {
+                text: "Hide from sidebar"
+                onTriggered: SettingsManager.setBoardHidden(NavigationController.siteId, modelData.code, true)
+
+                contentItem: Text {
+                    text: parent.text
+                    color: Theme.ink
+                    font.pixelSize: 13
+                    verticalAlignment: Text.AlignVCenter
+                    leftPadding: 8
+                    rightPadding: 8
+                }
+                background: Rectangle {
+                    implicitHeight: 30
+                    radius: Theme.radiusSm
+                    color: parent.hovered ? Theme.surface3 : "transparent"
+                }
+            }
         }
     }
 }

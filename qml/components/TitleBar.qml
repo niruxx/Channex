@@ -160,6 +160,12 @@ Item {
         }
     }
 
+    // Declared before (so it paints behind) `bar`, and anchored to it
+    // rather than nested inside it - bar itself clips its contents to
+    // stay within the rounded corners, which would also clip away this
+    // shadow's larger, negative-margin layers.
+    CardShadow { anchors.fill: bar; radius: Theme.radiusLg }
+
     // The actual visible titlebar surface - a floating rounded card
     // inset from the window edges, matching Sidebar's card treatment.
     Rectangle {

@@ -63,7 +63,12 @@ Dialog {
         Behavior on opacity { NumberAnimation { duration: 160 } }
     }
 
-    background: Rectangle { color: Theme.surface; radius: Theme.radiusLg; border.color: Theme.border }
+    background: Rectangle {
+        color: Theme.surface
+        radius: Theme.radiusLg
+        border.color: Theme.border
+        CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
+    }
 
     header: ColumnLayout {
         Layout.fillWidth: true

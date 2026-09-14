@@ -24,6 +24,8 @@ Item {
         border.width: 1
         border.color: Theme.border
 
+        CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
+
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 16

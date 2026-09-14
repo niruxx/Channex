@@ -13,11 +13,19 @@ Rectangle {
 
     radius: Theme.radiusMd
     color: cardHover.hovered ? Theme.surface3 : Theme.surface2
-    border.color: cardHover.hovered ? Theme.border : Theme.borderSoft
+    border.width: cardHover.hovered ? 2 : 1
+    border.color: cardHover.hovered ? Theme.accent : Theme.borderSoft
+    scale: cardHover.hovered ? 1.015 : 1.0
     clip: true
 
-    Behavior on color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
-    Behavior on border.color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
+    // A CardShadow here would overflow into neighboring grid cells in
+    // a densely packed catalog grid, so depth on hover comes from an
+    // accent-colored border + a slight lift instead - both stay fully
+    // within the card's own bounds.
+    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on border.color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on border.width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
     HoverHandler { id: cardHover }
 

@@ -55,6 +55,8 @@ Flickable {
             color: Theme.surface
             border.color: Theme.border
 
+            CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
+
             ColumnLayout {
                 id: appearanceCol
                 x: 20; y: 16
@@ -171,6 +173,8 @@ Flickable {
             color: Theme.surface
             border.color: Theme.border
 
+            CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
+
             ColumnLayout {
                 id: contentCol
                 x: 20; y: 16
@@ -192,6 +196,8 @@ Flickable {
             radius: Theme.radiusLg
             color: Theme.surface
             border.color: Theme.border
+
+            CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
 
             ColumnLayout {
                 id: downloadsCol
@@ -232,6 +238,8 @@ Flickable {
             color: Theme.surface
             border.color: Theme.border
 
+            CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
+
             ColumnLayout {
                 id: sitesCol
                 x: 20; y: 16
@@ -252,6 +260,101 @@ Flickable {
                     text: "Add one from the \"+\" button next to the site switcher."
                     color: Theme.inkFaint
                     font.pixelSize: 12
+                }
+            }
+        }
+
+        // ---- Boards ----
+        Rectangle {
+            width: parent.width
+            height: boardsCol.implicitHeight + 32
+            radius: Theme.radiusLg
+            color: Theme.surface
+            border.color: Theme.border
+
+            CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
+
+            ColumnLayout {
+                id: boardsCol
+                x: 20; y: 16
+                width: parent.width - 40
+                spacing: 10
+
+                Text { text: "Boards"; color: Theme.ink; font.bold: true; font.pixelSize: 15 }
+                Text {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    color: Theme.inkDim
+                    font.pixelSize: 12
+                    text: "Hide specific boards from a site's list in the sidebar."
+                }
+
+                AppComboBox {
+                    id: boardsSiteBox
+                    Layout.fillWidth: true
+                    model: SitesController.sites.map(function (s) { return s.name })
+                }
+
+                ListView {
+                    id: boardsManageList
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Math.min(280, contentHeight)
+                    clip: true
+                    spacing: 2
+
+                    readonly property var managedSite: SitesController.sites[boardsSiteBox.currentIndex] || null
+
+                    // boardsForSite() is a plain invokable call, so this
+                    // binding alone wouldn't know to recompute once its
+                    // background fetch finishes - without refreshTick as
+                    // an explicit dependency, this would get stuck
+                    // showing just the synchronous defaultBoards
+                    // fallback instead of the site's full board list.
+                    property int refreshTick: 0
+                    model: {
+                        refreshTick
+                        return managedSite ? SitesController.boardsForSite(managedSite.id) : []
+                    }
+
+                    Connections {
+                        target: SitesController
+                        function onBoardsForSiteChanged(siteId) {
+                            if (!boardsManageList.managedSite || siteId !== boardsManageList.managedSite.id) return
+                            // boardsForSite() can itself call loadBoards(),
+                            // which emits this signal synchronously before
+                            // returning - incrementing refreshTick directly
+                            // here would mutate a dependency of the model
+                            // binding while it's still being evaluated
+                            // (a real "binding loop detected" warning, not
+                            // just a theoretical one). Qt.callLater defers
+                            // it past the current evaluation.
+                            Qt.callLater(function () { boardsManageList.refreshTick++ })
+                        }
+                    }
+                    // Reads hiddenBoards directly in each delegate too
+                    // (see BoardList.qml) so checkboxes stay in sync
+                    // with each other when toggled.
+
+                    delegate: RowLayout {
+                        width: boardsManageList.width
+                        readonly property var hiddenForManagedSite: SettingsManager.hiddenBoards[boardsManageList.managedSite ? boardsManageList.managedSite.id : ""] || []
+                        readonly property bool shown: hiddenForManagedSite.indexOf(modelData.code) === -1
+
+                        AppCheckBox {
+                            Layout.fillWidth: true
+                            text: "/" + modelData.code + "/  " + (modelData.title || "")
+                            checked: shown
+                            onToggled: SettingsManager.setBoardHidden(boardsManageList.managedSite.id, modelData.code, !checked)
+                        }
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        visible: boardsManageList.count === 0
+                        text: "No boards yet - open this site once to discover its boards."
+                        color: Theme.inkFaint
+                        font.pixelSize: 12
+                    }
                 }
             }
         }

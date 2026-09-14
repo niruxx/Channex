@@ -34,10 +34,21 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: "#000000"
-        opacity: 0.88
+        opacity: 0.9
         MouseArea {
             anchors.fill: parent
             onClicked: LightboxController.close()
+        }
+    }
+
+    // Subtle top/bottom vignette for a touch more cinematic depth than
+    // a single flat backdrop.
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#00000055" }
+            GradientStop { position: 0.5; color: "transparent" }
+            GradientStop { position: 1.0; color: "#00000055" }
         }
     }
 

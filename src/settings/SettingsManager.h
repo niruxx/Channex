@@ -27,6 +27,7 @@ class SettingsManager : public QObject
     Q_PROPERTY(bool birthdayHats READ birthdayHats WRITE setBirthdayHats NOTIFY birthdayHatsChanged)
     Q_PROPERTY(bool hasCompletedOnboarding READ hasCompletedOnboarding WRITE setHasCompletedOnboarding NOTIFY hasCompletedOnboardingChanged)
     Q_PROPERTY(QVariantList customSites READ customSites WRITE setCustomSites NOTIFY customSitesChanged)
+    Q_PROPERTY(QVariantMap hiddenBoards READ hiddenBoards WRITE setHiddenBoards NOTIFY hiddenBoardsChanged)
     Q_PROPERTY(bool hydrated READ hydrated NOTIFY hydratedChanged)
 
 public:
@@ -75,6 +76,14 @@ public:
     QVariantList customSites() const { return m_customSites; }
     void setCustomSites(const QVariantList &v);
 
+    // Keyed by siteId -> QVariantList of hidden board codes for that
+    // site. Read directly from QML (it's a real NOTIFYing property, so
+    // bindings stay reactive) rather than through an invokable lookup -
+    // see BoardList.qml / SettingsView.qml's Boards section.
+    QVariantMap hiddenBoards() const { return m_hiddenBoards; }
+    void setHiddenBoards(const QVariantMap &v);
+    Q_INVOKABLE void setBoardHidden(const QString &siteId, const QString &boardCode, bool hidden);
+
     bool hydrated() const { return m_hydrated; }
 
     Q_INVOKABLE void hydrate();
@@ -94,6 +103,7 @@ signals:
     void birthdayHatsChanged();
     void hasCompletedOnboardingChanged();
     void customSitesChanged();
+    void hiddenBoardsChanged();
     void hydratedChanged();
 
 private:
@@ -113,5 +123,6 @@ private:
     bool m_birthdayHats = true;
     bool m_hasCompletedOnboarding = false;
     QVariantList m_customSites;
+    QVariantMap m_hiddenBoards;
     bool m_hydrated = false;
 };

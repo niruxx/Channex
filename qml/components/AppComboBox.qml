@@ -71,6 +71,7 @@ ComboBox {
             border.width: 1
             border.color: Theme.border
             radius: Theme.radiusSm
+            CardShadow { anchors.fill: parent; radius: Theme.radiusSm }
         }
 
         contentItem: ListView {

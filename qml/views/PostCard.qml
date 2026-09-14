@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Channex
+import "../components"
 
 // Mirrors src/components/thread/PostCard.tsx + CommentText.tsx. Quote
 // links are encoded by CommentFormatter as href="quote:<id>"; QML's
@@ -44,6 +45,61 @@ Rectangle {
     implicitHeight: contentColumn.implicitHeight + pad * 2
 
     property var revealedFiles: ({})
+
+    // Right-click anywhere on the card to report the post - 4chan has
+    // no public report API (by design, to prevent abuse/automation),
+    // so like ExternalReply's reply handoff, this opens 4chan's own
+    // report page in the system browser where the user picks a reason
+    // and solves the captcha themselves. Declared low in the stacking
+    // order (before contentColumn's own left-button-only MouseAreas on
+    // links/thumbnails/etc.), so left-clicks still reach those normally
+    // and only right-clicks - which nothing else here handles - fall
+    // through to this one.
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        onClicked: if (root.site.id === "4chan") postContextMenu.popup()
+    }
+
+    Menu {
+        id: postContextMenu
+
+        enter: Transition {
+            NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 120; easing.type: Easing.OutCubic }
+        }
+        exit: Transition {
+            NumberAnimation { properties: "opacity"; from: 1; to: 0; duration: 90; easing.type: Easing.InCubic }
+        }
+
+        background: Rectangle {
+            implicitWidth: 210
+            color: Theme.surface2
+            border.width: 1
+            border.color: Theme.border
+            radius: Theme.radiusSm
+            CardShadow { anchors.fill: parent; radius: Theme.radiusSm }
+        }
+
+        MenuItem {
+            text: "Report post to 4chan…"
+            onTriggered: ExternalReply.openUrl(
+                "https://sys.4chan.org/" + NavigationController.boardCode + "/imgboard.php?mode=report&no=" + root.postId)
+
+            contentItem: Text {
+                text: parent.text
+                color: Theme.ink
+                font.pixelSize: 13
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: 8
+                rightPadding: 8
+            }
+            background: Rectangle {
+                implicitHeight: 30
+                radius: Theme.radiusSm
+                color: parent.hovered ? Theme.surface3 : "transparent"
+            }
+        }
+    }
 
     // Modern-only accent stripe down the left edge, inset from the top/
     // bottom so it never pokes past the card's rounded corners.

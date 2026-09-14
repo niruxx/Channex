@@ -163,6 +163,7 @@ void SitesController::loadBoards(const QString &siteId)
     m_boardState[siteId].error.clear();
     if (siteId == m_currentSiteId)
         emit boardsChanged();
+    emit boardsForSiteChanged(siteId);
 
     AdapterFactory::forSite(site)->fetchBoards(site, [this, siteId](QVariantList boards, QString error) {
         mergeDefaultBoards(siteId, boards);
@@ -172,7 +173,24 @@ void SitesController::loadBoards(const QString &siteId)
         state.error = error;
         if (siteId == m_currentSiteId)
             emit boardsChanged();
+        emit boardsForSiteChanged(siteId);
     });
+}
+
+QVariantList SitesController::boardsForSite(const QString &siteId)
+{
+    const auto it = m_boardState.constFind(siteId);
+    if (it != m_boardState.constEnd() && !it->boards.isEmpty())
+        return it->boards;
+
+    if (it == m_boardState.constEnd() || !it->loading)
+        loadBoards(siteId);
+
+    QVariantList fallback = findSite(siteId).value("defaultBoards").toList();
+    std::sort(fallback.begin(), fallback.end(), [](const QVariant &a, const QVariant &b) {
+        return a.toMap().value("code").toString() < b.toMap().value("code").toString();
+    });
+    return fallback;
 }
 
 void SitesController::addCustomSite(const QVariantMap &input)

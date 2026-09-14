@@ -62,6 +62,8 @@ void SettingsManager::hydrate()
         m_customSites.clear();
         for (const auto &v : obj.value("customSites").toArray())
             m_customSites.append(v.toObject().toVariantMap());
+
+        m_hiddenBoards = obj.value("hiddenBoards").toObject().toVariantMap();
     }
 
     m_hydrated = true;
@@ -78,6 +80,7 @@ void SettingsManager::hydrate()
     emit birthdayHatsChanged();
     emit hasCompletedOnboardingChanged();
     emit customSitesChanged();
+    emit hiddenBoardsChanged();
 }
 
 void SettingsManager::save() const
@@ -108,6 +111,8 @@ void SettingsManager::save() const
     for (const auto &v : m_customSites)
         customSites.append(QJsonObject::fromVariantMap(v.toMap()));
     obj["customSites"] = customSites;
+
+    obj["hiddenBoards"] = QJsonObject::fromVariantMap(m_hiddenBoards);
 
     QFile file(storePath());
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
@@ -211,5 +216,28 @@ void SettingsManager::setCustomSites(const QVariantList &v)
 {
     m_customSites = v;
     emit customSitesChanged();
+    save();
+}
+
+void SettingsManager::setHiddenBoards(const QVariantMap &v)
+{
+    m_hiddenBoards = v;
+    emit hiddenBoardsChanged();
+    save();
+}
+
+void SettingsManager::setBoardHidden(const QString &siteId, const QString &boardCode, bool hidden)
+{
+    QVariantList list = m_hiddenBoards.value(siteId).toList();
+    const int idx = list.indexOf(boardCode);
+    if (hidden && idx < 0)
+        list.append(boardCode);
+    else if (!hidden && idx >= 0)
+        list.removeAt(idx);
+    else
+        return;
+
+    m_hiddenBoards[siteId] = list;
+    emit hiddenBoardsChanged();
     save();
 }

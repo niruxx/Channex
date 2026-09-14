@@ -10,7 +10,22 @@ Item {
     id: root
     anchors.fill: parent
     z: -1
-    visible: SettingsManager.backgroundTheme !== "none"
+
+    // Always-on, barely-perceptible depth wash - independent of the
+    // opt-in aurora/particles/grid themes below (each still gated on
+    // backgroundTheme exactly as before). Even with backgroundTheme
+    // "none" (the default), a single flat canvas color reads as
+    // lifeless; this keeps "none"'s intent - no motion, no visual
+    // noise - while giving the app a sense of depth everywhere instead
+    // of only for users who've opted into a background theme.
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Qt.lighter(Theme.canvas, Theme.dark ? 1.22 : 1.0) }
+            GradientStop { position: 0.5; color: Theme.canvas }
+            GradientStop { position: 1.0; color: Qt.darker(Theme.canvas, Theme.dark ? 1.05 : 1.03) }
+        }
+    }
 
     // ---- aurora ----
     Item {

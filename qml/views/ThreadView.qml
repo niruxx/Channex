@@ -140,11 +140,25 @@ Item {
                 }
             }
 
-            footer: ReplyComposer {
-                width: postList.width - 24
-                site: root.site
-                threadWebUrl: controller.threadWebUrl
-                onPosted: controller.reload()
+            // ListView.spacing doesn't reliably apply between the last
+            // delegate and the footer (it's a positioning quirk, not
+            // something the footer item can fix from the inside), which
+            // left the reply box sitting right up against the last
+            // post - wrapping it and adding an explicit top margin
+            // guarantees breathing room regardless of that.
+            footer: Item {
+                width: postList.width
+                implicitHeight: replyComposer.implicitHeight + 24
+
+                ReplyComposer {
+                    id: replyComposer
+                    y: 24
+                    x: 12
+                    width: postList.width - 24
+                    site: root.site
+                    threadWebUrl: controller.threadWebUrl
+                    onPosted: controller.reload()
+                }
             }
         }
     }

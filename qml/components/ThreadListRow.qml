@@ -11,11 +11,13 @@ Rectangle {
     height: 88
     radius: Theme.radiusMd
     color: rowHover.hovered ? Theme.surface3 : Theme.surface2
-    border.color: rowHover.hovered ? Theme.border : Theme.borderSoft
+    border.width: rowHover.hovered ? 2 : 1
+    border.color: rowHover.hovered ? Theme.accent : Theme.borderSoft
     clip: true
 
-    Behavior on color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
-    Behavior on border.color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
+    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on border.color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on border.width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
     HoverHandler { id: rowHover }
 

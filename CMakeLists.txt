@@ -73,6 +73,7 @@ qt_add_qml_module(channex_qt
         qml/components/TitleBar.qml
         qml/components/WindowControls.qml
         qml/components/WindowResizeHandles.qml
+        qml/components/CardShadow.qml
         qml/components/Sidebar.qml
         qml/components/SiteSwitcher.qml
         qml/components/AddSiteDialog.qml

@@ -20,9 +20,39 @@ ApplicationWindow {
     flags: Qt.Window | Qt.FramelessWindowHint
     color: Theme.canvas
 
+    // Whole-window fade in/out. Window.opacity is a real native
+    // compositor-level fade (SetLayeredWindowAttributes on Windows),
+    // not just a QML item's opacity, so this covers everything - chrome
+    // included - rather than fading in the content while the window
+    // frame itself pops in instantly. Driven by one explicit
+    // NumberAnimation (not a Behavior) so fade-out can wait for
+    // onFinished before actually quitting, instead of racing the app
+    // exiting mid-fade.
+    opacity: 0
+    property bool closeRequested: false
+
+    NumberAnimation {
+        id: fadeAnim
+        target: mainWindow
+        property: "opacity"
+        duration: 220
+        easing.type: Easing.OutCubic
+        onFinished: if (mainWindow.closeRequested) Qt.quit()
+    }
+
+    onClosing: (close) => {
+        if (closeRequested) return
+        close.accepted = false
+        closeRequested = true
+        fadeAnim.to = 0
+        fadeAnim.restart()
+    }
+
     Component.onCompleted: {
         SitesController.currentSiteId = NavigationController.siteId
         SitesController.loadBoards(NavigationController.siteId)
+        fadeAnim.to = 1
+        fadeAnim.restart()
     }
 
     AnimatedBackground {

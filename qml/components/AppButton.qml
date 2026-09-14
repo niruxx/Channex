@@ -39,8 +39,21 @@ Button {
              : (control.hovered ? control.bgHoverColor : control.bgColor)
         border.width: control.flat ? 0 : 1
         border.color: Theme.border
+        clip: true
 
         Behavior on color { ColorAnimation { duration: 100 } }
+
+        // Subtle glassy sheen on filled accent buttons (checked,
+        // non-flat) for a touch more depth than a flat color fill.
+        Rectangle {
+            visible: control.checked && !control.flat
+            anchors.fill: parent
+            radius: parent.radius
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "#ffffff38" }
+                GradientStop { position: 0.55; color: "#ffffff00" }
+            }
+        }
     }
 
     contentItem: Row {

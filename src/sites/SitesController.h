@@ -40,6 +40,15 @@ public:
 
     Q_INVOKABLE QVariantMap findSite(const QString &id) const;
     Q_INVOKABLE void loadBoards(const QString &siteId);
+
+    // Boards for an arbitrary site, independent of currentSiteId/
+    // currentBoards (which only ever track the app's active site) - for
+    // Settings' board-visibility manager, which lets a user browse a
+    // site's boards without switching the sidebar/catalog to it. Kicks
+    // off a background fetch to warm the cache when needed, but returns
+    // synchronously: the sorted default board list as an immediate
+    // fallback, or the cached/fetched list once one exists.
+    Q_INVOKABLE QVariantList boardsForSite(const QString &siteId);
     Q_INVOKABLE void addCustomSite(const QVariantMap &input);
     Q_INVOKABLE void removeCustomSite(const QString &id);
 
@@ -56,6 +65,12 @@ signals:
     void sitesChanged();
     void currentSiteIdChanged();
     void boardsChanged();
+    // Fires for every loadBoards() completion, regardless of siteId -
+    // unlike boardsChanged() (which only fires for currentSiteId), this
+    // is what lets boardsForSite()'s consumers (Settings' board manager)
+    // know a background fetch for a NON-active site just finished, so
+    // they can move off the synchronous defaultBoards fallback.
+    void boardsForSiteChanged(const QString &siteId);
 
 private:
     explicit SitesController(QObject *parent = nullptr);
