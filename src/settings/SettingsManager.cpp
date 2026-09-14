@@ -54,6 +54,7 @@ void SettingsManager::hydrate()
         m_accentColor = obj.value("accentColor").toString("#6ee7c9");
         m_backgroundTheme = obj.value("backgroundTheme").toString("none");
         m_catalogViewMode = obj.value("catalogViewMode").toString("grid");
+        m_replyDisplayStyle = obj.value("replyDisplayStyle").toString("standard");
         m_muteWebmsByDefault = obj.value("muteWebmsByDefault").toBool(true);
         m_birthdayHats = obj.value("birthdayHats").toBool(true);
         m_hasCompletedOnboarding = obj.value("hasCompletedOnboarding").toBool(false);
@@ -72,6 +73,7 @@ void SettingsManager::hydrate()
     emit accentColorChanged();
     emit backgroundThemeChanged();
     emit catalogViewModeChanged();
+    emit replyDisplayStyleChanged();
     emit muteWebmsByDefaultChanged();
     emit birthdayHatsChanged();
     emit hasCompletedOnboardingChanged();
@@ -97,6 +99,7 @@ void SettingsManager::save() const
     obj["accentColor"] = m_accentColor;
     obj["backgroundTheme"] = m_backgroundTheme;
     obj["catalogViewMode"] = m_catalogViewMode;
+    obj["replyDisplayStyle"] = m_replyDisplayStyle;
     obj["muteWebmsByDefault"] = m_muteWebmsByDefault;
     obj["birthdayHats"] = m_birthdayHats;
     obj["hasCompletedOnboarding"] = m_hasCompletedOnboarding;
@@ -169,6 +172,14 @@ void SettingsManager::setCatalogViewMode(const QString &v)
     if (m_catalogViewMode == v) return;
     m_catalogViewMode = v;
     emit catalogViewModeChanged();
+    save();
+}
+
+void SettingsManager::setReplyDisplayStyle(const QString &v)
+{
+    if (m_replyDisplayStyle == v) return;
+    m_replyDisplayStyle = v;
+    emit replyDisplayStyleChanged();
     save();
 }
 

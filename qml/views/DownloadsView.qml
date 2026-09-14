@@ -20,9 +20,10 @@ Item {
         add: Transition {
             NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic }
         }
-        displaced: Transition {
-            NumberAnimation { properties: "y"; duration: 180; easing.type: Easing.OutCubic }
-        }
+        // No `displaced` transition: each job's delegate height is
+        // variable (grows with its file count), and animating y against
+        // a still-settling variable height is what caused the thread
+        // reply list's overlap bug - see ThreadView.qml.
 
         Text {
             anchors.centerIn: parent

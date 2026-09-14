@@ -139,6 +139,27 @@ Flickable {
                         }
                     }
                 }
+
+                ColumnLayout {
+                    spacing: 6
+                    Text { text: "Reply style"; color: Theme.inkDim; font.pixelSize: 12 }
+                    RowLayout {
+                        spacing: 6
+                        Repeater {
+                            model: [
+                                { mode: "compact", label: "Compact" },
+                                { mode: "standard", label: "Standard" },
+                                { mode: "modern", label: "Modern" },
+                            ]
+                            delegate: AppButton {
+                                text: modelData.label
+                                checkable: true
+                                checked: SettingsManager.replyDisplayStyle === modelData.mode
+                                onClicked: SettingsManager.replyDisplayStyle = modelData.mode
+                            }
+                        }
+                    }
+                }
             }
         }
 

@@ -4,15 +4,20 @@ import QtQuick.Layouts
 import QtQuick.Window
 import Channex
 
-// Mirrors src/components/layout/TitleBar.tsx: 56px custom-drawn header
-// with an OS-drag region, a back button, a breadcrumb trail, and
+// Mirrors src/components/layout/TitleBar.tsx: custom-drawn header with
+// an OS-drag region, a back button, a breadcrumb trail, and
 // platform-ordered window controls (mac: traffic lights on the left;
 // win/linux: rectangular controls on the right).
-Rectangle {
+//
+// Drawn as a floating, fully-rounded card inset from the window edges -
+// the same "surface floating over the animated background" language
+// Sidebar.qml uses - rather than a flush square header, with a
+// pill-shaped breadcrumb and a circular, accent-ringed site avatar for
+// a more modern feel.
+Item {
     id: root
     required property var targetWindow
-    height: 56
-    color: Theme.surface
+    height: 68
 
     readonly property bool isMac: Qt.platform.os === "osx"
     readonly property bool isWindows: Qt.platform.os === "windows"
@@ -28,11 +33,11 @@ Rectangle {
         }
     }
 
-    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.borderSoft }
-
     // Drag region - sits behind the interactive controls (they're
     // instantiated after this in the RowLayout below, so they win
-    // Z-order/hit-testing by default).
+    // Z-order/hit-testing by default). Fills the whole strip, including
+    // the gaps around the floating bar below, so the entire header
+    // height stays grabbable rather than just the visible card.
     //
     // Moves the window manually (tracking mouse deltas) instead of
     // calling startSystemMove(): that enters a native Win32 modal
@@ -155,60 +160,133 @@ Rectangle {
         }
     }
 
-    RowLayout {
+    // The actual visible titlebar surface - a floating rounded card
+    // inset from the window edges, matching Sidebar's card treatment.
+    Rectangle {
+        id: bar
         anchors.fill: parent
-        anchors.leftMargin: root.isMac ? 12 : 16
-        anchors.rightMargin: 12
-        spacing: 12
+        anchors.margins: 8
+        radius: Theme.radiusLg
+        color: Theme.surface
+        border.width: 1
+        border.color: Theme.border
+        clip: true
 
-        WindowControls { targetWindow: root.targetWindow; visible: root.isMac }
-
-        AppButton {
-            flat: true
-            iconName: "chevron-left"
-            enabled: NavigationController.canGoBack
-            opacity: enabled ? 1 : 0.35
-            Behavior on opacity { NumberAnimation { duration: 120 } }
-            onClicked: NavigationController.back()
-        }
-
+        // Subtle top-to-mid sheen for a bit of glassy depth. A no-op in
+        // light theme (Theme.surface is already white, so lightening it
+        // clamps back to white), a soft highlight in dark theme.
         Rectangle {
-            width: 22; height: 22; radius: 6
-            color: root.currentSite.accent || Theme.accent
-            visible: NavigationController.view !== "bookmarks" && NavigationController.view !== "downloads" && NavigationController.view !== "settings"
-            clip: true
-
-            readonly property bool hasFavicon: !!root.currentSite.favicon && root.currentSite.favicon.length > 0
-
-            Text {
-                anchors.centerIn: parent
-                visible: !parent.hasFavicon || favicon.status !== Image.Ready
-                text: (root.currentSite.name || "?").charAt(0).toUpperCase()
-                color: "#0c0e11"
-                font.pixelSize: 11
-                font.bold: true
-            }
-
-            Image {
-                id: favicon
-                anchors.centerIn: parent
-                width: 16; height: 16
-                visible: parent.hasFavicon && status === Image.Ready
-                source: parent.hasFavicon ? root.currentSite.favicon : ""
-                fillMode: Image.PreserveAspectFit
-                asynchronous: true
-                cache: true
+            anchors.fill: parent
+            radius: parent.radius
+            opacity: 0.5
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.lighter(Theme.surface, 1.35) }
+                GradientStop { position: 0.6; color: Theme.surface }
             }
         }
 
-        Text {
-            text: root.breadcrumb
-            color: Theme.ink
-            font.pixelSize: 13
-            elide: Text.ElideMiddle
-            Layout.fillWidth: true
+        // Thin accent glow along the top edge - a small techy signature
+        // touch tying the bar back to the user's chosen accent color.
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: parent.radius * 0.5
+            height: 2
+            radius: 1
+            opacity: 0.55
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 0.5; color: Theme.accent }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
         }
 
-        WindowControls { targetWindow: root.targetWindow; visible: !root.isMac }
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: root.isMac ? 14 : 16
+            anchors.rightMargin: 14
+            spacing: 12
+
+            WindowControls { targetWindow: root.targetWindow; visible: root.isMac }
+
+            AppButton {
+                flat: true
+                iconName: "chevron-left"
+                enabled: NavigationController.canGoBack
+                opacity: enabled ? 1 : 0.35
+                Behavior on opacity { NumberAnimation { duration: 120 } }
+                onClicked: NavigationController.back()
+            }
+
+            // Circular site avatar with a soft accent ring, in place of
+            // the old flat square badge.
+            Item {
+                width: 30; height: 30
+                visible: NavigationController.view !== "bookmarks" && NavigationController.view !== "downloads" && NavigationController.view !== "settings"
+
+                readonly property bool hasFavicon: !!root.currentSite.favicon && root.currentSite.favicon.length > 0
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 30; height: 30; radius: 15
+                    color: "transparent"
+                    border.width: 2
+                    border.color: root.currentSite.accent || Theme.accent
+                    opacity: 0.35
+                }
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 24; height: 24; radius: 12
+                    color: root.currentSite.accent || Theme.accent
+                    clip: true
+
+                    Text {
+                        anchors.centerIn: parent
+                        visible: !parent.parent.hasFavicon || favicon.status !== Image.Ready
+                        text: (root.currentSite.name || "?").charAt(0).toUpperCase()
+                        color: "#0c0e11"
+                        font.pixelSize: 11
+                        font.bold: true
+                    }
+
+                    Image {
+                        id: favicon
+                        anchors.centerIn: parent
+                        width: 16; height: 16
+                        visible: parent.parent.hasFavicon && status === Image.Ready
+                        source: parent.parent.hasFavicon ? root.currentSite.favicon : ""
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                        cache: true
+                    }
+                }
+            }
+
+            // Breadcrumb as a pill-shaped "chip" rather than bare text.
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 32
+                radius: height / 2
+                color: Theme.surface2
+                border.width: 1
+                border.color: Theme.borderSoft
+
+                Text {
+                    anchors.fill: parent
+                    anchors.leftMargin: 14
+                    anchors.rightMargin: 14
+                    verticalAlignment: Text.AlignVCenter
+                    text: root.breadcrumb
+                    color: Theme.ink
+                    font.pixelSize: 13
+                    elide: Text.ElideMiddle
+                }
+            }
+
+            WindowControls { targetWindow: root.targetWindow; visible: !root.isMac }
+        }
     }
 }

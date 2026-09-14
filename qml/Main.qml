@@ -29,8 +29,14 @@ ApplicationWindow {
         anchors.fill: parent
     }
 
+    // Follows the actual window shape: main.cpp clips the frameless
+    // window to a rounded region on Windows (SetWindowRgn - DWM's own
+    // corner rounding doesn't apply to a borderless popup window), so
+    // this outline is rounded to the same radius rather than drawing a
+    // square that would get cut off at the true (rounded) corners.
     Rectangle {
         anchors.fill: parent
+        radius: 14
         color: "transparent"
         border.width: 1
         border.color: Theme.border
@@ -64,11 +70,11 @@ ApplicationWindow {
             anchors.fill: parent
             spacing: 0
 
-            TitleBar { width: parent.width; targetWindow: mainWindow }
+            TitleBar { id: titleBar; width: parent.width; targetWindow: mainWindow }
 
             Row {
                 width: parent.width
-                height: parent.height - 56
+                height: parent.height - titleBar.height
 
                 Sidebar { height: parent.height }
 
@@ -127,4 +133,6 @@ ApplicationWindow {
 
         MediaLightbox { anchors.fill: parent }
     }
+
+    WindowResizeHandles { targetWindow: mainWindow }
 }

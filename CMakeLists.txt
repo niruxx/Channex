@@ -72,6 +72,7 @@ qt_add_qml_module(channex_qt
         qml/MediaLightbox.qml
         qml/components/TitleBar.qml
         qml/components/WindowControls.qml
+        qml/components/WindowResizeHandles.qml
         qml/components/Sidebar.qml
         qml/components/SiteSwitcher.qml
         qml/components/AddSiteDialog.qml
@@ -123,7 +124,7 @@ qt_add_qml_module(channex_qt
 )
 
 set_target_properties(channex_qt PROPERTIES
-    WIN32_EXECUTABLE OFF
+    WIN32_EXECUTABLE ON
     MACOSX_BUNDLE ON
 )
 

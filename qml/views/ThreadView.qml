@@ -99,9 +99,15 @@ Item {
             add: Transition {
                 NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic }
             }
-            displaced: Transition {
-                NumberAnimation { properties: "y"; duration: 180; easing.type: Easing.OutCubic }
-            }
+            // Deliberately no `displaced` transition here: PostCard's
+            // height is variable (depends on comment length/files), and
+            // animating a ListView's displaced `y` against delegates
+            // whose height can still be settling is a known Qt Quick
+            // trap - the tween can lock items into a y that doesn't
+            // match their actual (possibly since-changed) height,
+            // leaving them visibly overlapping instead of stacked. Plain
+            // opacity fades for populate/add carry the "proper
+            // animation" intent without touching position.
 
             BusyIndicator { anchors.centerIn: parent; running: controller.loading; visible: controller.loading }
 

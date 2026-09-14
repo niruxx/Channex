@@ -22,6 +22,7 @@ class SettingsManager : public QObject
     Q_PROPERTY(QString accentColor READ accentColor WRITE setAccentColor NOTIFY accentColorChanged)
     Q_PROPERTY(QString backgroundTheme READ backgroundTheme WRITE setBackgroundTheme NOTIFY backgroundThemeChanged)
     Q_PROPERTY(QString catalogViewMode READ catalogViewMode WRITE setCatalogViewMode NOTIFY catalogViewModeChanged)
+    Q_PROPERTY(QString replyDisplayStyle READ replyDisplayStyle WRITE setReplyDisplayStyle NOTIFY replyDisplayStyleChanged)
     Q_PROPERTY(bool muteWebmsByDefault READ muteWebmsByDefault WRITE setMuteWebmsByDefault NOTIFY muteWebmsByDefaultChanged)
     Q_PROPERTY(bool birthdayHats READ birthdayHats WRITE setBirthdayHats NOTIFY birthdayHatsChanged)
     Q_PROPERTY(bool hasCompletedOnboarding READ hasCompletedOnboarding WRITE setHasCompletedOnboarding NOTIFY hasCompletedOnboardingChanged)
@@ -58,6 +59,10 @@ public:
     QString catalogViewMode() const { return m_catalogViewMode; }
     void setCatalogViewMode(const QString &v);
 
+    // "compact" | "standard" | "modern" - see PostCard.qml.
+    QString replyDisplayStyle() const { return m_replyDisplayStyle; }
+    void setReplyDisplayStyle(const QString &v);
+
     bool muteWebmsByDefault() const { return m_muteWebmsByDefault; }
     void setMuteWebmsByDefault(bool v);
 
@@ -84,6 +89,7 @@ signals:
     void accentColorChanged();
     void backgroundThemeChanged();
     void catalogViewModeChanged();
+    void replyDisplayStyleChanged();
     void muteWebmsByDefaultChanged();
     void birthdayHatsChanged();
     void hasCompletedOnboardingChanged();
@@ -102,6 +108,7 @@ private:
     QString m_accentColor = QStringLiteral("#6ee7c9");
     QString m_backgroundTheme = QStringLiteral("none");
     QString m_catalogViewMode = QStringLiteral("grid");
+    QString m_replyDisplayStyle = QStringLiteral("standard");
     bool m_muteWebmsByDefault = true;
     bool m_birthdayHats = true;
     bool m_hasCompletedOnboarding = false;
