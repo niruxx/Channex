@@ -58,6 +58,14 @@ ComboBox {
         implicitHeight: Math.min(contentItem.implicitHeight + 8, 280)
         padding: 4
 
+        enter: Transition {
+            NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 140; easing.type: Easing.OutCubic }
+            NumberAnimation { properties: "scale"; from: 0.94; to: 1; duration: 140; easing.type: Easing.OutCubic }
+        }
+        exit: Transition {
+            NumberAnimation { properties: "opacity"; from: 1; to: 0; duration: 100; easing.type: Easing.InCubic }
+        }
+
         background: Rectangle {
             color: Theme.surface2
             border.width: 1

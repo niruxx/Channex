@@ -61,7 +61,9 @@ Rectangle {
         Text { text: "Reply"; color: Theme.ink; font.bold: true; font.pixelSize: 13 }
 
         ColumnLayout {
-            visible: root.isLynxchan
+            opacity: root.isLynxchan ? 1 : 0
+            visible: opacity > 0
+            Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
             spacing: 8
 
@@ -99,7 +101,9 @@ Rectangle {
         }
 
         ColumnLayout {
-            visible: !root.isLynxchan
+            opacity: root.isLynxchan ? 0 : 1
+            visible: opacity > 0
+            Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
             spacing: 8
 

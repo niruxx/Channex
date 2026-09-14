@@ -70,12 +70,18 @@ Item {
             id: mainImage
             anchors.centerIn: parent
             source: LightboxController.imageSource
-            visible: LightboxController.loadState === "loaded"
+            opacity: LightboxController.loadState === "loaded" ? 1 : 0
+            visible: opacity > 0
             asynchronous: true
             fillMode: Image.PreserveAspectFit
             width: Math.min(parent.width - 80, implicitWidth) * (LightboxController.zoomed ? 1.9 : 1)
             height: Math.min(parent.height - 160, implicitHeight) * (LightboxController.zoomed ? 1.9 : 1)
 
+            // Crossfades between files instead of popping: loadState drops
+            // back to "loading" on every prev/next/goTo (see
+            // LightboxController::loadCurrent), so this fades the old image
+            // out and the new one in around that state change for free.
+            Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
             Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
             Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
@@ -106,6 +112,8 @@ Item {
         VideoOutput {
             id: videoOutput
             anchors.fill: parent
+            opacity: (player.mediaStatus === MediaPlayer.Loading || player.mediaStatus === MediaPlayer.NoMedia) ? 0 : 1
+            Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
 
             MouseArea {
                 anchors.fill: parent

@@ -24,14 +24,24 @@ Rectangle {
             Repeater {
                 model: root.steps.length
                 delegate: Rectangle {
-                    width: 8; height: 8; radius: 4
+                    width: index === root.stepIndex ? 20 : 8
+                    height: 8
+                    radius: 4
                     color: index === root.stepIndex ? Theme.accent : Theme.surface3
+
+                    Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                    Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
                 }
             }
         }
 
-        StackLayout {
+        SwipeView {
+            id: wizardStack
             Layout.fillWidth: true
+            Layout.preferredHeight: currentItem ? currentItem.implicitHeight : 0
+            Behavior on Layout.preferredHeight { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+            clip: true
+            interactive: false
             currentIndex: root.stepIndex
 
             ColumnLayout {

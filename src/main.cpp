@@ -33,8 +33,13 @@ int main(int argc, char *argv[])
 
     // Google Sans itself is Google's proprietary font and can't be
     // bundled/redistributed here; "Segoe UI Variable" is Windows 11's
-    // own modern system UI face (falls back to "Segoe UI" pre-Win11 or
-    // on other platforms) and reads similarly clean/geometric.
+    // own modern system UI face (falls back to "Segoe UI" pre-Win11)
+    // and reads similarly clean/geometric. Neither exists outside
+    // Windows, so forcing the family there would just hand Linux/macOS
+    // whatever last-resort font substitution their fontconfig/CoreText
+    // happens to pick - instead leave the platform's own default UI
+    // font (Cantarell/Noto Sans, SF Pro, ...) alone and only bump size.
+#if defined(Q_OS_WIN)
     {
         QFont uiFont(QStringLiteral("Segoe UI Variable Display"));
         if (!QFontInfo(uiFont).exactMatch())
@@ -42,6 +47,13 @@ int main(int argc, char *argv[])
         uiFont.setPointSize(10);
         QGuiApplication::setFont(uiFont);
     }
+#else
+    {
+        QFont uiFont = QGuiApplication::font();
+        uiFont.setPointSize(10);
+        QGuiApplication::setFont(uiFont);
+    }
+#endif
 
     QQmlApplicationEngine engine;
 
@@ -63,6 +75,11 @@ int main(int argc, char *argv[])
         &engine, &QQmlApplicationEngine::objectCreationFailed,
         &app, []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
+
+    QObject::connect(&engine, &QQmlApplicationEngine::warnings, &app, [](const QList<QQmlError> &warnings) {
+        for (const auto &w : warnings)
+            fprintf(stderr, "QML WARNING: %s\n", qPrintable(w.toString()));
+    });
 
     engine.loadFromModule("Channex", "Main");
 

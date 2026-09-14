@@ -92,6 +92,11 @@ Dialog {
         bottomMargin: 16
         model: root.files
 
+        populate: Transition {
+            NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic }
+            NumberAnimation { properties: "scale"; from: 0.9; to: 1; duration: 180; easing.type: Easing.OutCubic }
+        }
+
         delegate: Item {
             width: grid.cellWidth
             height: grid.cellHeight

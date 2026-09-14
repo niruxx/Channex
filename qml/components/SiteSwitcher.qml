@@ -21,6 +21,14 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: 8
 
+        add: Transition {
+            NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
+            NumberAnimation { properties: "scale"; from: 0.85; to: 1; duration: 160; easing.type: Easing.OutCubic }
+        }
+        move: Transition {
+            NumberAnimation { properties: "x,y"; duration: 160; easing.type: Easing.OutCubic }
+        }
+
         Repeater {
             model: visibleSites
             delegate: Rectangle {

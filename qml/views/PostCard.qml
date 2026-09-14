@@ -105,8 +105,14 @@ Rectangle {
                             asynchronous: true
                             visible: !shouldBlur
                         }
-                        Rectangle { anchors.fill: parent; color: "black"; opacity: 0.85; visible: shouldBlur }
-                        Text { anchors.centerIn: parent; visible: shouldBlur; text: "Tap to reveal"; color: "white"; font.pixelSize: 10 }
+                        Rectangle {
+                            anchors.fill: parent
+                            color: "black"
+                            opacity: shouldBlur ? 0.85 : 0
+                            visible: opacity > 0
+                            Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                            Text { anchors.centerIn: parent; text: "Tap to reveal"; color: "white"; font.pixelSize: 10 }
+                        }
 
                         Rectangle {
                             anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 4

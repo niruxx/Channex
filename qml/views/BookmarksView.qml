@@ -12,6 +12,20 @@ Item {
         clip: true
         model: BookmarksController.bookmarks
 
+        populate: Transition {
+            NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+        }
+        add: Transition {
+            NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic }
+        }
+        remove: Transition {
+            NumberAnimation { properties: "opacity"; to: 0; duration: 140; easing.type: Easing.InCubic }
+            NumberAnimation { properties: "scale"; to: 0.9; duration: 140; easing.type: Easing.InCubic }
+        }
+        displaced: Transition {
+            NumberAnimation { properties: "y"; duration: 180; easing.type: Easing.OutCubic }
+        }
+
         Text {
             anchors.centerIn: parent
             visible: BookmarksController.bookmarks.length === 0

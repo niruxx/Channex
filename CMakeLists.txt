@@ -123,7 +123,7 @@ qt_add_qml_module(channex_qt
 )
 
 set_target_properties(channex_qt PROPERTIES
-    WIN32_EXECUTABLE ON
+    WIN32_EXECUTABLE OFF
     MACOSX_BUNDLE ON
 )
 
@@ -158,7 +158,75 @@ target_link_libraries(channex_qt PRIVATE
 )
 
 include(GNUInstallDirs)
-install(TARGETS channex_qt
-    BUNDLE DESTINATION .
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if(WIN32)
+    # Windows apps conventionally live in one flat directory (the exe
+    # next to its DLLs), matching where windeployqt already drops the
+    # Qt runtime below - so install straight to the package root
+    # instead of GNUInstallDirs' bin/ split.
+    install(TARGETS channex_qt RUNTIME DESTINATION .)
+else()
+    install(TARGETS channex_qt
+        BUNDLE DESTINATION .
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif()
+
+# The built .exe on its own only resolves Qt6*.dll / QML plugins when
+# Qt's bin/ happens to already be on PATH (e.g. inside an IDE that set
+# it up) - launched any other way (double-click, a plain shell) it
+# fails with missing-DLL errors. Auto-run windeployqt after every build
+# so the runtime always sits next to the executable and it "just runs".
+if(WIN32)
+    get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+    get_filename_component(QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
+    if(WINDEPLOYQT_EXECUTABLE)
+        add_custom_command(TARGET channex_qt POST_BUILD
+            COMMAND "${WINDEPLOYQT_EXECUTABLE}" --qmldir "${CMAKE_SOURCE_DIR}/qml" $<TARGET_FILE:channex_qt>
+            COMMENT "Deploying Qt runtime next to channex_qt.exe"
+        )
+    else()
+        message(WARNING "windeployqt not found next to Qt's qmake - channex_qt.exe won't have its Qt DLLs deployed automatically")
+    endif()
+
+    # ------------------------------------------------------------------
+    # Windows installer (CPack + NSIS)
+    # ------------------------------------------------------------------
+    # Packages channex_qt.exe plus everything windeployqt deployed next
+    # to it (Qt DLLs, QML plugins, platform plugin, translations) into
+    # a single setup.exe with a Start Menu shortcut and uninstaller.
+    # install(DIRECTORY ...) copies whatever's actually in the target's
+    # output folder at `cmake --install` time, so it always matches
+    # whatever windeployqt decided this build needs - nothing here has
+    # to be kept in sync with that list by hand.
+    install(DIRECTORY "$<TARGET_FILE_DIR:channex_qt>/"
+        DESTINATION .
+        PATTERN "*.exe" EXCLUDE
+        PATTERN "*.lib" EXCLUDE
+        PATTERN "*.exp" EXCLUDE
+        PATTERN "*.pdb" EXCLUDE
+        PATTERN "*.ilk" EXCLUDE
+    )
+
+    # windeployqt doesn't bundle the MSVC C++ runtime DLLs
+    # (vcruntime140.dll, msvcp140.dll, ...). Most machines already have
+    # them via some other app's redistributable, but a clean Windows
+    # install might not - ship them alongside the exe rather than
+    # requiring a separate vc_redist install.
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ".")
+    set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
+    include(InstallRequiredSystemLibraries)
+
+    set(CPACK_PACKAGE_NAME "Channex")
+    set(CPACK_PACKAGE_VENDOR "niruxxdaboi")
+    set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+    set(CPACK_PACKAGE_INSTALL_DIRECTORY "Channex")
+    set(CPACK_PACKAGE_EXECUTABLES "channex_qt" "Channex")
+    set(CPACK_CREATE_DESKTOP_LINKS "channex_qt")
+    set(CPACK_NSIS_DISPLAY_NAME "Channex")
+    set(CPACK_NSIS_PACKAGE_NAME "Channex")
+    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+    set(CPACK_NSIS_MODIFY_PATH OFF)
+    set(CPACK_GENERATOR "NSIS")
+    include(CPack)
+endif()

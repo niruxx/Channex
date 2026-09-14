@@ -15,6 +15,7 @@ Rectangle {
     color: Theme.surface
 
     readonly property bool isMac: Qt.platform.os === "osx"
+    readonly property bool isWindows: Qt.platform.os === "windows"
     readonly property var currentSite: SitesController.findSite(NavigationController.siteId)
 
     readonly property string breadcrumb: {
@@ -42,26 +43,52 @@ Rectangle {
     // loop (better overall animation smoothness - see main.cpp) instead
     // of forcing the slower basic loop just to work around that.
     //
-    // Two things were still causing glitching on longer/faster drags
-    // even after an earlier Qt.callLater-based throttle:
+    // Several things were causing glitching / sub-native-feeling drags:
     //
     // 1. Qt.callLater only coalesces calls that land within the same
     //    event-loop tick. Under sustained fast mouse movement, native
     //    move events can arrive spread across many ticks rather than
     //    bursts within one, so that throttle wasn't actually capping
-    //    the update rate the way a real frame budget would. Replaced
-    //    with a fixed ~60Hz Timer: onPositionChanged only ever updates
-    //    a *target* position (cheap), and the Timer is what actually
-    //    calls QWindow::setX/setY (a native SetWindowPos on Windows),
-    //    at most once per tick no matter how fast the mouse reports.
+    //    the update rate the way a real frame budget would.
     //
-    // 2. AnimatedBackground keeps animating continuously underneath
+    // 2. A follow-up fixed-interval (~60Hz) Timer fixed that, but a
+    //    fixed interval can only ever approximate the display's actual
+    //    refresh rate - it hard-capped every drag to 60Hz even on a
+    //    240Hz screen, which felt slower than native window drags
+    //    there. Tried driving position updates off the window's own
+    //    frameSwapped signal instead (calling update() from inside the
+    //    handler to keep it self-triggering) to tie the rate to real
+    //    vsync - that backfired badly: nothing here actually guarantees
+    //    that a manually-requested update()/frameSwapped cycle blocks
+    //    on the real display refresh the way natural repaints do, so it
+    //    could spin far faster and more erratically than the display's
+    //    Hz, firing the expensive native SetWindowPos call way more
+    //    often (and less predictably) than the old timer ever did -
+    //    much worse jank, not better.
+    //
+    //    Reverted to a Timer, but its interval now tracks the window's
+    //    actual screen refresh rate (Screen.refreshRate) instead of a
+    //    hardcoded 60Hz guess, so it still runs close to a 240Hz
+    //    screen's real cadence without the runaway risk of the
+    //    self-driving frameSwapped approach - a bounded, predictable
+    //    rate beats an unbounded one that happens to be aimed at vsync.
+    //
+    // 3. AnimatedBackground keeps animating continuously underneath
     //    everything (aurora/particles/grid), and moving the window is
     //    already asking the render thread + DWM to do extra work every
     //    frame - the longer the drag, the more accumulated frames were
     //    competing for the same GPU time as those animations. Toggling
     //    WindowDragState.active pauses them for the duration of the
     //    drag (see AnimatedBackground.qml).
+    //
+    // This manual tracking is Windows-only. On X11/macOS it isn't
+    // needed (startSystemMove() doesn't hit that Win32 modal-loop
+    // desync there), and on Wayland it flat-out can't work: a Wayland
+    // client has no ability to set its own global position at all -
+    // window.x/window.y writes are silently ignored by the compositor.
+    // startSystemMove() is the only thing that moves a frameless window
+    // there (it hands off to the compositor's xdg_toplevel move), so
+    // every non-Windows platform uses it instead.
     MouseArea {
         id: dragArea
         anchors.fill: parent
@@ -71,12 +98,25 @@ Rectangle {
         property real pendingX: 0
         property real pendingY: 0
 
+        // Clamped so a bogus/unreported refresh rate (0, -1) can't turn
+        // the Timer's interval into 0/negative or something absurdly
+        // small; 240 is a generous upper bound for current high-refresh
+        // monitors while still being far better than a flat 60.
+        readonly property real screenHz: {
+            const hz = root.targetWindow.screen ? root.targetWindow.screen.refreshRate : 60
+            return (hz > 0 && hz < 1000) ? hz : 60
+        }
+
         function endDrag() {
             moveTimer.stop()
             WindowDragState.active = false
         }
 
         onPressed: (mouse) => {
+            if (!root.isWindows) {
+                root.targetWindow.startSystemMove()
+                return
+            }
             pressGlobal = mapToGlobal(mouse.x, mouse.y)
             windowStartPos = Qt.point(root.targetWindow.x, root.targetWindow.y)
             pendingX = windowStartPos.x
@@ -85,27 +125,28 @@ Rectangle {
             moveTimer.start()
         }
         onPositionChanged: (mouse) => {
-            if (pressed && root.targetWindow.visibility !== Window.Maximized) {
+            if (root.isWindows && pressed && root.targetWindow.visibility !== Window.Maximized) {
                 const g = mapToGlobal(mouse.x, mouse.y)
                 pendingX = windowStartPos.x + (g.x - pressGlobal.x)
                 pendingY = windowStartPos.y + (g.y - pressGlobal.y)
             }
         }
         onReleased: {
+            if (!root.isWindows) return
             endDrag()
             root.targetWindow.x = pendingX
             root.targetWindow.y = pendingY
         }
-        onCanceled: endDrag()
+        onCanceled: { if (root.isWindows) endDrag() }
         onDoubleClicked: {
-            endDrag()
+            if (root.isWindows) endDrag()
             root.targetWindow.visibility === Window.Maximized
                 ? root.targetWindow.showNormal() : root.targetWindow.showMaximized()
         }
 
         Timer {
             id: moveTimer
-            interval: 16
+            interval: Math.max(1, Math.round(1000 / dragArea.screenHz))
             repeat: true
             onTriggered: {
                 root.targetWindow.x = dragArea.pendingX

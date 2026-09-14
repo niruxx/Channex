@@ -51,9 +51,12 @@ a rendered README, so click through to view/download it.
 - In-app LynxChan posting (captcha fetch + multipart reply) for
   8kun/8chan.moe-style sites.
 - Custom frameless window chrome with platform-correct control
-  placement (macOS traffic lights left, Windows/Linux buttons right)
-  and a manually-tracked drag (avoids the native-move-loop stutter
-  `startSystemMove()` causes on Windows).
+  placement (macOS traffic lights left, Windows/Linux buttons right).
+  Windows drags the window manually (avoids the native-move-loop
+  stutter `startSystemMove()` causes there); Linux/macOS use
+  `startSystemMove()` directly, which is required on Wayland (a client
+  can't reposition its own window at all there - only a
+  compositor-driven move works) and is already smooth on X11/macOS.
 
 ## Known parity gaps
 
@@ -85,9 +88,12 @@ Tauri app. Things intentionally left for later:
 ## Building
 
 Requires **Qt 6.5+** (Core, Gui, Qml, Quick, QuickControls2, Network,
-Multimedia) and **CMake 3.21+**. Developed and tested against **Qt
-6.8.3 with MSVC 2022 on Windows**; other Qt 6.5+ / compiler / OS
-combinations should work but haven't been verified.
+Multimedia — plus the Qt Quick Dialogs QML module, used for the
+folder-picker, which ships as part of Qt's declarative module) and
+**CMake 3.21+**. Developed and tested against **Qt 6.8.3 with MSVC
+2022 on Windows**; the app has no Windows-specific code (no Win32
+API calls, no hardcoded paths) so it should build and run as-is on
+Linux and macOS, but those platforms haven't been verified first-hand.
 
 ```sh
 cmake -B build -DCMAKE_PREFIX_PATH="<path-to-your-Qt6-install>/lib/cmake"
@@ -95,10 +101,34 @@ cmake --build build --config Debug
 ```
 
 Then run the built `channex_qt` (`channex_qt.exe` on Windows, under
-`build/Debug/`) binary. On Windows, make sure Qt's `bin/` directory
-(with `Qt6Core.dll` etc.) is on `PATH`, or copy those DLLs next to the
-executable, before running it outside of an IDE that already resolves
-them.
+`build/Debug/` or `build/Release/`) binary directly — on Windows, a
+post-build step automatically runs `windeployqt` so the Qt DLLs and
+QML plugins it needs are already sitting next to the exe.
+
+### Windows installer
+
+A Release build also wires up `CPack` with the NSIS generator, so a
+single command turns the build into a proper installer
+(`channex_qt.exe`, its Qt runtime, and the MSVC redistributable DLLs,
+with a Start Menu shortcut and uninstaller). Requires
+[NSIS](https://nsis.sourceforge.io/) on `PATH` (`winget install
+NSIS.NSIS`):
+
+```sh
+cmake --build build --config Release
+cd build && cpack -C Release
+```
+
+This produces `build/Channex-<version>-win64.exe`.
+
+On Linux, install Qt6 via your distro's packages (e.g. on Debian/
+Ubuntu: `qt6-base-dev qt6-declarative-dev qt6-multimedia-dev
+qt6-quickcontrols2-dev qml6-module-qtquick-dialogs
+qml6-module-qtquick-controls qml6-module-qtquick-layouts
+qml6-module-qtqml-workerscript` — package names vary by distro/version)
+or from Qt's own online installer, then point `CMAKE_PREFIX_PATH` at
+it the same way. The frameless custom titlebar drags correctly on both
+X11 and Wayland (see the note in Features above).
 
 No CI or packaging config yet — add platform installers once the app
 is further along.

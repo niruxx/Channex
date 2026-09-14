@@ -56,8 +56,9 @@ Rectangle {
             Rectangle {
                 anchors.fill: parent
                 color: "black"
-                opacity: 0.85
-                visible: root.shouldBlur
+                opacity: root.shouldBlur ? 0.85 : 0
+                visible: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                 Text {
                     anchors.centerIn: parent
                     text: "Tap to reveal"

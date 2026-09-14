@@ -14,6 +14,16 @@ Item {
         clip: true
         model: DownloadManager.jobs
 
+        populate: Transition {
+            NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+        }
+        add: Transition {
+            NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic }
+        }
+        displaced: Transition {
+            NumberAnimation { properties: "y"; duration: 180; easing.type: Easing.OutCubic }
+        }
+
         Text {
             anchors.centerIn: parent
             visible: DownloadManager.jobs.length === 0

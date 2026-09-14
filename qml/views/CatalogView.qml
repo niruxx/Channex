@@ -89,6 +89,18 @@ Item {
                 cellHeight: SettingsManager.catalogViewMode === "compact" ? 210 : 340
                 clip: true
 
+                populate: Transition {
+                    NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+                    NumberAnimation { properties: "scale"; from: 0.92; to: 1; duration: 200; easing.type: Easing.OutCubic }
+                }
+                add: Transition {
+                    NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic }
+                    NumberAnimation { properties: "scale"; from: 0.92; to: 1; duration: 180; easing.type: Easing.OutCubic }
+                }
+                displaced: Transition {
+                    NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutCubic }
+                }
+
                 delegate: Item {
                     width: gridView.cellWidth - 8
                     height: gridView.cellHeight - 8
@@ -115,6 +127,16 @@ Item {
                 Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                 Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                 model: controller
+
+                populate: Transition {
+                    NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+                }
+                add: Transition {
+                    NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic }
+                }
+                displaced: Transition {
+                    NumberAnimation { properties: "y"; duration: 180; easing.type: Easing.OutCubic }
+                }
 
                 delegate: Item {
                     width: listView.width
