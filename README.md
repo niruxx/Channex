@@ -19,11 +19,10 @@ reference. This directory (the repo root) is now the active project.
 
 ## Demo video
 
-[screenshots/demo.mp4](screenshots/demo.mp4) — a short screen recording
-walking through board switching, the catalog grid/list view toggle,
-opening a thread, the media lightbox (with its thumbnail filmstrip),
-and the settings page. GitHub doesn't play repo-hosted video inline in
-a rendered README, so click through to view/download it.
+Removed. The recording used to demo the catalog/thread/lightbox flow
+happened to capture a piece of NSFW content from a live board while
+scrolling, which wasn't caught before the file was committed — it's
+been deleted and won't be replaced with another repo-hosted recording.
 
 ## Features
 

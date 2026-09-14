@@ -5,10 +5,10 @@ import Channex
 
 // Mirrors the <Sidebar> composition in src/App.tsx: SiteSwitcher +
 // BoardList on top, Bookmarks/Downloads/Settings nav at the bottom.
-// Rendered as a floating, outlined card inset from the window edges
-// (rather than a flat panel flush against them) so it reads as a
-// distinct, modern surface against the canvas/animated background
-// behind it.
+// A flat, outlined panel inset from the window edges (rather than
+// flush against them) so it still reads as a distinct surface against
+// the canvas behind it - no drop shadow, since it's structural chrome
+// always on screen rather than a floating/elevated surface.
 Item {
     id: root
     width: 240
@@ -23,8 +23,6 @@ Item {
         color: Theme.surface
         border.width: 1
         border.color: Theme.border
-
-        CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
 
         ColumnLayout {
             anchors.fill: parent
@@ -77,9 +75,25 @@ Item {
                         height: 34
                         radius: Theme.radiusSm
                         readonly property bool current: NavigationController.view === modelData.view
-                        color: current ? Theme.surface3 : (navHover.hovered ? Theme.surface2 : "transparent")
+                        // Bold flat accent tint + a solid accent bar for
+                        // the active item, instead of a neutral grey
+                        // highlight - a more confident, deliberate flat
+                        // indicator (Notion/Linear-style sidebars use the
+                        // same pattern).
+                        color: current ? Theme.withAlpha(Theme.accent, 0.16) : (navHover.hovered ? Theme.surface2 : "transparent")
 
                         Behavior on color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
+
+                        Rectangle {
+                            visible: navDelegate.current
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 5
+                            width: 3
+                            radius: 1.5
+                            color: Theme.accent
+                        }
 
                         RowLayout {
                             anchors.fill: parent

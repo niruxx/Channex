@@ -1,18 +1,18 @@
 import QtQuick
 import Channex
 
-// A cheap drop-shadow illusion for floating cards (Sidebar, TitleBar,
-// Settings cards, dialogs) - three progressively larger, lower-opacity,
-// downward-offset rectangles standing in for a real gaussian blur.
-// Qt's MultiEffect (QtQuick.Effects) turned out unreliable for
-// colorization on this Qt/RHI setup earlier this session, and a proper
-// blur carries the same risk; layered flat rectangles are less
-// beautiful up close but can't render broken, which matters more when
-// this can't be visually spot-checked before shipping.
+// A minimal, crisp drop-shadow for genuinely floating/elevated
+// surfaces only - dialogs, popups, context menus - not structural
+// chrome that's always on screen (Sidebar/TitleBar are flat, no
+// shadow, by design). One low-opacity, downward-offset rectangle
+// stands in for a real gaussian blur: Qt's MultiEffect proved
+// unreliable for colorization on this Qt/RHI setup earlier this
+// session, and a proper blur carries the same risk, so this favors
+// "flat and correct" over "soft and might render broken."
 //
-// Usage: drop as the first child of the card (so it paints behind),
-// anchored/fill-parented to the card, with `radius` matching the
-// card's own radius.
+// Usage: drop as the first child of the surface (so it paints
+// behind), anchored/fill-parented to it, with `radius` matching the
+// surface's own radius.
 Item {
     id: root
     property int radius: Theme.radiusLg
@@ -20,22 +20,8 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        anchors.topMargin: 10
-        anchors.margins: -6
-        radius: root.radius + 4
-        color: Theme.withAlpha(Theme.shadowColor, 0.10)
-    }
-    Rectangle {
-        anchors.fill: parent
-        anchors.topMargin: 5
-        anchors.margins: -2
-        radius: root.radius + 2
-        color: Theme.withAlpha(Theme.shadowColor, 0.14)
-    }
-    Rectangle {
-        anchors.fill: parent
-        anchors.topMargin: 2
+        anchors.topMargin: 4
         radius: root.radius
-        color: Theme.withAlpha(Theme.shadowColor, 0.16)
+        color: Theme.withAlpha(Theme.shadowColor, 0.18)
     }
 }

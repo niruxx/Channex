@@ -55,8 +55,6 @@ Flickable {
             color: Theme.surface
             border.color: Theme.border
 
-            CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
-
             ColumnLayout {
                 id: appearanceCol
                 x: 20; y: 16
@@ -77,6 +75,64 @@ Flickable {
                                 checkable: true
                                 checked: SettingsManager.theme === modelData
                                 onClicked: SettingsManager.theme = modelData
+                            }
+                        }
+                    }
+                }
+
+                // Styled after 4chan's own theme-selector footer - a
+                // plain list of named links, not a swatch grid - with a
+                // small color dot added as a preview of each skin's
+                // signature accent. Picking one of these also overrides
+                // the accent color above with that skin's traditional
+                // link color (see Theme.qml) for the full authentic
+                // look, not just a background tint.
+                ColumnLayout {
+                    spacing: 6
+                    Text { text: "Classic imageboard skins"; color: Theme.inkDim; font.pixelSize: 12 }
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: 16
+                        Repeater {
+                            model: Theme.chanThemeIds
+                            delegate: Item {
+                                id: themeDelegate
+                                implicitWidth: themeRow.implicitWidth
+                                implicitHeight: themeRow.implicitHeight
+                                readonly property bool current: SettingsManager.theme === modelData
+
+                                // RowLayout, not Row: Row positioners
+                                // don't allow anchoring (incl.
+                                // verticalCenter) on their children at
+                                // all - it silently breaks their
+                                // layout - so vertical centering here
+                                // needs Layout.alignment instead.
+                                RowLayout {
+                                    id: themeRow
+                                    spacing: 6
+
+                                    Rectangle {
+                                        Layout.alignment: Qt.AlignVCenter
+                                        width: 11; height: 11; radius: 5
+                                        color: Theme.chanPalettes[modelData].accent
+                                        border.width: 1
+                                        border.color: Theme.chanPalettes[modelData].border
+                                    }
+                                    Text {
+                                        Layout.alignment: Qt.AlignVCenter
+                                        text: Theme.chanThemeNames[modelData]
+                                        color: themeDelegate.current ? Theme.accent : Theme.inkDim
+                                        font.pixelSize: 12
+                                        font.bold: themeDelegate.current
+                                        font.underline: themeHover.hovered
+                                    }
+                                }
+                                HoverHandler { id: themeHover }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: SettingsManager.theme = modelData
+                                }
                             }
                         }
                     }
@@ -173,8 +229,6 @@ Flickable {
             color: Theme.surface
             border.color: Theme.border
 
-            CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
-
             ColumnLayout {
                 id: contentCol
                 x: 20; y: 16
@@ -196,8 +250,6 @@ Flickable {
             radius: Theme.radiusLg
             color: Theme.surface
             border.color: Theme.border
-
-            CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
 
             ColumnLayout {
                 id: downloadsCol
@@ -238,8 +290,6 @@ Flickable {
             color: Theme.surface
             border.color: Theme.border
 
-            CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
-
             ColumnLayout {
                 id: sitesCol
                 x: 20; y: 16
@@ -271,8 +321,6 @@ Flickable {
             radius: Theme.radiusLg
             color: Theme.surface
             border.color: Theme.border
-
-            CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
 
             ColumnLayout {
                 id: boardsCol
@@ -371,7 +419,7 @@ Flickable {
             Layout.topMargin: 8
             spacing: 2
             Text { Layout.alignment: Qt.AlignHCenter; text: "- niruxxdaboi -"; color: Theme.inkFaint; font.pixelSize: 12 }
-            Text { Layout.alignment: Qt.AlignHCenter; text: "QT6 - Ver. 1.0.0"; color: Theme.inkFaint; font.pixelSize: 11 }
+            Text { Layout.alignment: Qt.AlignHCenter; text: "QT6 - Ver. 0.1.2"; color: Theme.inkFaint; font.pixelSize: 11 }
         }
 
         Item { width: 1; height: 8 }
