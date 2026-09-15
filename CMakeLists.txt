@@ -229,6 +229,17 @@ if(WIN32)
     set(CPACK_NSIS_PACKAGE_NAME "Channex")
     set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
     set(CPACK_NSIS_MODIFY_PATH OFF)
+
+    # MSI packaging (CPack's WIX generator, built on the classic WiX v3
+    # toolchain - candle.exe/light.exe). Not the default output (NSIS
+    # still is - see README); build one explicitly with
+    # `cpack -G WIX -C Release`. CPACK_WIX_UPGRADE_GUID must stay fixed
+    # across every future version - it's what lets Windows Installer
+    # recognize a newer MSI as an upgrade of this same product rather
+    # than a separate install; only ever change it if Channex is ever
+    # deliberately relaunched as an unrelated product.
+    set(CPACK_WIX_UPGRADE_GUID "19D54672-F224-4BFB-AA0C-07978F7C80B9")
+
     set(CPACK_GENERATOR "NSIS")
     include(CPack)
 endif()
