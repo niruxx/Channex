@@ -1,0 +1,30 @@
+# Maintainer: niruxxdaboi <perezkyle6@gmail.com>
+#
+# Builds from the local working tree (two directories up), not a
+# downloaded tarball. Run `makepkg -si` from this directory.
+pkgname=channex
+pkgver=0.1.2
+pkgrel=1
+pkgdesc="Native Qt6/QML desktop viewer for chan-style imageboards"
+arch=('x86_64')
+url="https://github.com/niruxx/Channex"
+license=('LicenseRef-unknown')
+depends=('qt6-base' 'qt6-declarative' 'qt6-multimedia' 'qt6-svg' 'gcc-libs' 'glibc')
+makedepends=('cmake' 'qt6-shadertools')
+source=('channex.desktop')
+sha256sums=('SKIP')
+
+_srcroot="$(realpath "$startdir/../..")"
+
+build() {
+  cmake -S "$_srcroot" -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build --parallel "$(nproc)"
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 "$srcdir/channex.desktop" "$pkgdir/usr/share/applications/channex.desktop"
+  install -Dm644 "$_srcroot/resources/icons/app.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/channex.svg"
+}

@@ -2,43 +2,100 @@ import QtQuick
 import QtQuick.Controls.Basic
 import Channex
 
-// Theme-consistent drop-in replacement for the Basic style's TextField
-// (which otherwise renders with a white background and black text).
-// Set `leftIcon` (see resources/icons/ui/) to show a leading glyph.
+// M3 text field. Two looks:
+//
+//   variant "filled" (default) - surfaceContainerHighest fill, square
+//     bottom with an active indicator line (1px, 2px primary on focus),
+//     and an optional floating `label` that rests inside the field and
+//     floats up to the top on focus / once there's text.
+//   variant "search" - the M3 search bar: a full-pill
+//     surfaceContainerHigh field with a leading icon.
+//
+// `leftIcon` (resources/icons/ui/) adds a leading glyph to either.
 TextField {
     id: control
 
-    property string leftIcon: ""
+    property string label: ""
+    property string leftIcon: variant === "search" ? "search" : ""
+    property string variant: "filled"
 
-    color: Theme.ink
-    placeholderTextColor: Theme.inkFaint
-    selectionColor: Theme.accent
-    selectedTextColor: "#0c0e11"
-    font.pixelSize: 13
+    readonly property bool isSearch: variant === "search"
+    readonly property bool hasLabel: label.length > 0 && !isSearch
+    readonly property bool floated: activeFocus || text.length > 0 || preeditText.length > 0
+
+    color: Theme.onSurfaceColor
+    placeholderTextColor: hasLabel && !floated ? "transparent" : Theme.onSurfaceVariantColor
+    selectionColor: Theme.withAlpha(Theme.primary, 0.4)
+    selectedTextColor: Theme.onSurfaceColor
+    font.pixelSize: Theme.bodyLarge
     selectByMouse: true
+    hoverEnabled: true
+    verticalAlignment: TextInput.AlignVCenter
 
-    leftPadding: control.leftIcon.length > 0 ? 34 : 12
-    rightPadding: 12
-    topPadding: 8
-    bottomPadding: 8
-    implicitHeight: 36
+    leftPadding: leftIcon.length > 0 ? (isSearch ? 52 : 48) : 16
+    rightPadding: 16
+    topPadding: hasLabel ? 22 : 0
+    bottomPadding: hasLabel ? 6 : 0
+    implicitHeight: isSearch ? 48 : (hasLabel ? 56 : 48)
 
     background: Rectangle {
-        radius: Theme.radiusSm
-        color: Theme.surface2
-        border.width: 1
-        border.color: control.activeFocus ? Theme.accent : Theme.border
+        color: control.isSearch ? Theme.surfaceContainerHigh : Theme.surfaceContainerHighest
+        radius: control.isSearch ? height / 2 : 0
+        topLeftRadius: control.isSearch ? height / 2 : Theme.shapeExtraSmall
+        topRightRadius: control.isSearch ? height / 2 : Theme.shapeExtraSmall
+        opacity: control.enabled ? 1 : 0.5
 
-        Behavior on border.color { ColorAnimation { duration: 100 } }
+        StateLayer {
+            radius: parent.radius
+            layerColor: Theme.onSurfaceColor
+            hovered: control.hovered && !control.activeFocus
+        }
+
+        // Active indicator (filled variant only).
+        Rectangle {
+            visible: !control.isSearch
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: control.activeFocus ? 2 : 1
+            color: control.activeFocus ? Theme.primary : Theme.onSurfaceVariantColor
+            Behavior on color { ColorAnimation { duration: Theme.durShort } }
+        }
+
+        // Search bar focus ring.
+        Rectangle {
+            visible: control.isSearch
+            anchors.fill: parent
+            radius: parent.radius
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.primary
+            opacity: control.activeFocus ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: Theme.durShort } }
+        }
 
         AppIcon {
             visible: control.leftIcon.length > 0
             anchors.left: parent.left
-            anchors.leftMargin: 10
+            anchors.leftMargin: control.isSearch ? 18 : 14
             anchors.verticalCenter: parent.verticalCenter
             name: control.leftIcon
-            iconSize: 14
-            color: Theme.inkFaint
+            iconSize: 20
+            color: Theme.onSurfaceVariantColor
+        }
+
+        Text {
+            id: floatingLabel
+            visible: control.hasLabel
+            x: control.leftPadding
+            text: control.label
+            color: control.activeFocus ? Theme.primary : Theme.onSurfaceVariantColor
+            font.pixelSize: control.floated ? Theme.bodySmall : Theme.bodyLarge
+            y: control.floated ? 8 : (parent.height - height) / 2
+
+            Behavior on y { NumberAnimation { duration: Theme.durShort; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeStandard } }
+            Behavior on font.pixelSize { NumberAnimation { duration: Theme.durShort; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeStandard } }
+            Behavior on color { ColorAnimation { duration: Theme.durShort } }
         }
     }
 }

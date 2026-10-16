@@ -3,133 +3,81 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Channex
 
-// Mirrors the <Sidebar> composition in src/App.tsx: SiteSwitcher +
-// BoardList on top, Bookmarks/Downloads/Settings nav at the bottom.
-// A flat, outlined panel inset from the window edges (rather than
-// flush against them) so it still reads as a distinct surface against
-// the canvas behind it - no drop shadow, since it's structural chrome
-// always on screen rather than a floating/elevated surface.
+// M3 standard navigation drawer: sits directly on the window's
+// surfaceContainer background (the content pane beside it is the
+// raised `surface`), with site switcher, the active site's boards, and
+// the app-level destinations pinned at the bottom.
 Item {
     id: root
-    width: 240
+    width: 264
 
-    Rectangle {
+    ColumnLayout {
         anchors.fill: parent
-        anchors.topMargin: 10
-        anchors.bottomMargin: 10
-        anchors.leftMargin: 10
-        anchors.rightMargin: 6
-        radius: Theme.radiusLg
-        color: Theme.surface
-        border.width: 1
-        border.color: Theme.border
+        anchors.leftMargin: 12
+        anchors.rightMargin: 12
+        anchors.bottomMargin: 12
+        spacing: 4
 
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 16
-            spacing: 14
+        Text {
+            Layout.leftMargin: 16
+            Layout.topMargin: 4
+            text: "Sites"
+            color: Theme.onSurfaceVariantColor
+            font.pixelSize: Theme.titleSmall
+            font.weight: Font.Medium
+        }
 
-            RowLayout {
+        SiteSwitcher {
+            Layout.fillWidth: true
+            Layout.leftMargin: 12
+            Layout.topMargin: 6
+            Layout.bottomMargin: 10
+        }
+
+        Rectangle { Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; implicitHeight: 1; color: Theme.outlineVariant }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 16
+            Layout.rightMargin: 16
+            Layout.topMargin: 10
+            Layout.bottomMargin: 2
+            Text {
                 Layout.fillWidth: true
-                spacing: 8
-
-                Image {
-                    Layout.preferredWidth: 26
-                    Layout.preferredHeight: 26
-                    source: "qrc:/qt/qml/Channex/resources/icons/app.svg"
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                }
-                Text {
-                    text: "Channex"
-                    color: Theme.ink
-                    font.pixelSize: 15
-                    font.bold: true
-                    Layout.fillWidth: true
-                }
+                text: "Boards"
+                color: Theme.onSurfaceVariantColor
+                font.pixelSize: Theme.titleSmall
+                font.weight: Font.Medium
             }
+            Text {
+                text: boardList.count > 0 ? boardList.count : ""
+                color: Theme.outline
+                font.pixelSize: Theme.labelMedium
+            }
+        }
 
-            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderSoft }
+        BoardList { id: boardList; Layout.fillWidth: true; Layout.fillHeight: true }
 
-            SiteSwitcher { Layout.fillWidth: true }
+        Rectangle { Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; implicitHeight: 1; color: Theme.outlineVariant; Layout.topMargin: 4; Layout.bottomMargin: 4 }
 
-            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderSoft }
-
-            BoardList { Layout.fillWidth: true; Layout.fillHeight: true }
-
-            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderSoft }
-
-            ColumnLayout {
+        Repeater {
+            model: [
+                { label: "Bookmarks", view: "bookmarks", icon: "bookmark" },
+                { label: "Downloads", view: "downloads", icon: "download" },
+                { label: "Settings", view: "settings", icon: "gear" },
+            ]
+            delegate: NavItem {
                 Layout.fillWidth: true
-                spacing: 2
-
-                Repeater {
-                    model: [
-                        { label: "Bookmarks", view: "bookmarks", icon: "bookmark" },
-                        { label: "Downloads", view: "downloads", icon: "download" },
-                        { label: "Settings", view: "settings", icon: "gear" },
-                    ]
-                    delegate: Rectangle {
-                        id: navDelegate
-                        Layout.fillWidth: true
-                        height: 34
-                        radius: Theme.radiusSm
-                        readonly property bool current: NavigationController.view === modelData.view
-                        // Bold flat accent tint + a solid accent bar for
-                        // the active item, instead of a neutral grey
-                        // highlight - a more confident, deliberate flat
-                        // indicator (Notion/Linear-style sidebars use the
-                        // same pattern).
-                        color: current ? Theme.withAlpha(Theme.accent, 0.16) : (navHover.hovered ? Theme.surface2 : "transparent")
-
-                        Behavior on color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
-
-                        Rectangle {
-                            visible: navDelegate.current
-                            anchors.left: parent.left
-                            anchors.top: parent.top
-                            anchors.bottom: parent.bottom
-                            anchors.margins: 5
-                            width: 3
-                            radius: 1.5
-                            color: Theme.accent
-                        }
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 10
-                            anchors.rightMargin: 10
-                            spacing: 8
-
-                            AppIcon {
-                                name: modelData.icon
-                                iconSize: 15
-                                color: navDelegate.current ? Theme.accent : Theme.inkDim
-                                Behavior on color { ColorAnimation { duration: 120 } }
-                            }
-
-                            Text {
-                                Layout.fillWidth: true
-                                text: modelData.label
-                                color: navDelegate.current ? Theme.accent : Theme.inkDim
-                                font.pixelSize: 13
-
-                                Behavior on color { ColorAnimation { duration: 120 } }
-                            }
-                        }
-
-                        HoverHandler { id: navHover }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (modelData.view === "bookmarks") NavigationController.goBookmarks()
-                                else if (modelData.view === "downloads") NavigationController.goDownloads()
-                                else NavigationController.goSettings()
-                            }
-                        }
-                    }
+                text: modelData.label
+                iconName: modelData.view === "bookmarks" && selected ? "bookmark-fill" : modelData.icon
+                selected: NavigationController.view === modelData.view
+                badge: modelData.view === "bookmarks" && BookmarksController.bookmarks.length > 0
+                       ? String(BookmarksController.bookmarks.length)
+                       : (modelData.view === "downloads" && DownloadManager.jobs.length > 0 ? String(DownloadManager.jobs.length) : "")
+                onClicked: {
+                    if (modelData.view === "bookmarks") NavigationController.goBookmarks()
+                    else if (modelData.view === "downloads") NavigationController.goDownloads()
+                    else NavigationController.goSettings()
                 }
             }
         }

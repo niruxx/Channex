@@ -2,67 +2,153 @@ import QtQuick
 import QtQuick.Controls.Basic
 import Channex
 
-// Theme-consistent drop-in replacement for the Basic style's Button,
-// which otherwise renders with its light default palette (white/grey)
-// regardless of Theme.dark - every raw `Button {}` in a dark-themed view
-// should use this instead. Set `iconName` (see resources/icons/ui/) for
-// a leading icon; leave `text` empty alongside it for an icon-only
-// square button, or set both for an icon+label button.
+// M3 button family in one control. Pick the style with `variant`:
+//
+//   "filled"   - highest emphasis (primary action of a screen/dialog)
+//   "tonal"    - filled tonal (secondaryContainer), medium emphasis
+//   "outlined" - medium-low emphasis
+//   "text"     - lowest emphasis
+//   "elevated" - tonal surface + shadow, for use over busy content
+//   "icon" / "filledIcon" / "tonalIcon" / "outlinedIcon"
+//              - the four M3 icon-button styles (set iconName, no text)
+//
+// Left unset, `variant` is inferred from the older flat/checked props
+// so any call site that predates the M3 pass still renders sensibly.
+// Icon buttons treat `checked` as the M3 toggle "selected" state.
+// `onMedia` re-tints for use over photos/video (the lightbox), where
+// theme surface colors would vanish against the content.
 Button {
     id: control
 
     property string iconName: ""
+    property string variant: ""
+    property bool onMedia: false
+    property bool compact: false
+    property string tooltip: ""
+
     readonly property bool iconOnly: iconName.length > 0 && text.length === 0
     readonly property bool hasIcon: iconName.length > 0
 
-    readonly property color bgColor: control.flat
-        ? "transparent"
-        : (control.checked ? Theme.accent : Theme.surface3)
-    readonly property color bgHoverColor: control.flat
-        ? Theme.surface2
-        : (control.checked ? Theme.accent : Theme.surface4)
-    readonly property color fgColor: control.checked ? (control.flat ? Theme.accent : "#0c0e11") : Theme.ink
+    readonly property string resolvedVariant: variant.length > 0 ? variant
+        : iconOnly ? (flat ? "icon" : "tonalIcon")
+        : flat ? (checked && !checkable ? "filled" : "text")
+        : (checked && !checkable ? "filled" : "tonal")
 
-    implicitHeight: 36
-    implicitWidth: iconOnly ? 36 : implicitContentWidth + leftPadding + rightPadding
-    leftPadding: iconOnly ? 0 : (hasIcon ? 12 : 14)
-    rightPadding: iconOnly ? 0 : 14
-    font.pixelSize: 13
+    readonly property bool selected: checkable && checked
 
-    scale: control.down ? 0.96 : 1.0
-    Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
-
-    background: Rectangle {
-        radius: Theme.radiusSm
-        color: !control.enabled ? Theme.surface2
-             : control.down ? Qt.darker(control.hovered ? control.bgHoverColor : control.bgColor, 1.15)
-             : (control.hovered ? control.bgHoverColor : control.bgColor)
-        border.width: control.flat ? 0 : 1
-        border.color: Theme.border
-
-        Behavior on color { ColorAnimation { duration: 100 } }
+    readonly property color containerColor: {
+        if (onMedia) {
+            switch (resolvedVariant) {
+            case "filled": case "filledIcon": return Theme.primary
+            case "tonal": case "tonalIcon": case "elevated": return Qt.rgba(0, 0, 0, 0.55)
+            default: return "transparent"
+            }
+        }
+        switch (resolvedVariant) {
+        case "filled": return Theme.primary
+        case "tonal": return Theme.secondaryContainer
+        case "elevated": return Theme.surfaceContainerLow
+        case "filledIcon": return (checkable && !checked) ? Theme.surfaceContainerHighest : Theme.primary
+        case "tonalIcon": return (checkable && !checked) ? Theme.surfaceContainerHighest : Theme.secondaryContainer
+        case "outlinedIcon": return selected ? Theme.inverseSurface : "transparent"
+        case "icon": return "transparent"
+        default: return "transparent"
+        }
     }
 
-    contentItem: Row {
-        spacing: 8
+    readonly property color contentColor: {
+        if (onMedia) {
+            switch (resolvedVariant) {
+            case "filled": case "filledIcon": return Theme.onPrimaryColor
+            default: return "#ffffff"
+            }
+        }
+        switch (resolvedVariant) {
+        case "filled": return Theme.onPrimaryColor
+        case "tonal": return Theme.onSecondaryContainerColor
+        case "outlined": case "text": case "elevated": return Theme.primary
+        case "filledIcon": return (checkable && !checked) ? Theme.primary : Theme.onPrimaryColor
+        case "tonalIcon": return (checkable && !checked) ? Theme.onSurfaceVariantColor : Theme.onSecondaryContainerColor
+        case "outlinedIcon": return selected ? Theme.inverseOnSurface : Theme.onSurfaceVariantColor
+        case "icon": return selected ? Theme.primary : Theme.onSurfaceVariantColor
+        default: return Theme.primary
+        }
+    }
 
-        AppIcon {
-            visible: control.hasIcon
-            anchors.verticalCenter: parent.verticalCenter
-            name: control.iconName
-            iconSize: 15
-            color: control.enabled ? control.fgColor : Theme.inkFaint
+    readonly property bool hasOutline: resolvedVariant === "outlined" || (resolvedVariant === "outlinedIcon" && !selected)
+    readonly property int size: compact ? 32 : 40
+
+    implicitHeight: size
+    implicitWidth: iconOnly ? size : Math.max(compact ? 48 : 64, implicitContentWidth + leftPadding + rightPadding)
+    leftPadding: iconOnly ? 0 : (resolvedVariant === "text" ? 12 : (hasIcon ? 16 : 24))
+    rightPadding: iconOnly ? 0 : (resolvedVariant === "text" ? (hasIcon ? 16 : 12) : 24)
+    topPadding: 0
+    bottomPadding: 0
+    font.pixelSize: compact ? Theme.labelMedium : Theme.labelLarge
+    font.weight: Font.Medium
+    hoverEnabled: true
+
+    background: Rectangle {
+        radius: height / 2
+        color: !control.enabled
+            ? (control.containerColor.a > 0 ? Theme.withAlpha(Theme.onSurfaceColor, Theme.disabledContainerOpacity) : "transparent")
+            : control.containerColor
+        border.width: control.hasOutline ? 1 : 0
+        border.color: control.enabled ? (control.onMedia ? "#ffffff88" : Theme.outline)
+                                      : Theme.withAlpha(Theme.onSurfaceColor, Theme.disabledContainerOpacity)
+
+        Behavior on color { ColorAnimation { duration: Theme.durShort } }
+
+        CardShadow {
+            radius: parent.radius
+            level: control.resolvedVariant === "elevated" && control.enabled ? (control.hovered ? 2 : 1) : 0
         }
 
-        Text {
-            visible: control.text.length > 0
-            anchors.verticalCenter: parent.verticalCenter
-            text: control.text
-            font: control.font
-            color: control.enabled ? control.fgColor : Theme.inkFaint
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            elide: Text.ElideRight
+        StateLayer {
+            layerColor: control.contentColor
+            hovered: control.hovered && control.enabled
+            pressed: control.down
+            focused: control.visualFocus
         }
+    }
+
+    contentItem: Item {
+        implicitWidth: row.implicitWidth
+        implicitHeight: row.implicitHeight
+
+        Row {
+            id: row
+            anchors.centerIn: parent
+            spacing: 8
+
+            AppIcon {
+                visible: control.hasIcon
+                anchors.verticalCenter: parent.verticalCenter
+                name: control.iconName
+                iconSize: control.compact ? 16 : (control.iconOnly ? 20 : 18)
+                color: control.enabled ? control.contentColor : Theme.withAlpha(Theme.onSurfaceColor, Theme.disabledContentOpacity)
+            }
+
+            Text {
+                visible: control.text.length > 0
+                anchors.verticalCenter: parent.verticalCenter
+                text: control.text
+                font: control.font
+                color: control.enabled ? control.contentColor : Theme.withAlpha(Theme.onSurfaceColor, Theme.disabledContentOpacity)
+                elide: Text.ElideRight
+            }
+        }
+    }
+
+    // M3 plain tooltip - mostly for icon-only buttons.
+    ToolTip {
+        visible: control.tooltip.length > 0 && control.hovered
+        delay: 600
+        text: control.tooltip
+        padding: 8
+        topPadding: 4
+        bottomPadding: 4
+        contentItem: Text { text: control.tooltip; color: Theme.inverseOnSurface; font.pixelSize: Theme.bodySmall }
+        background: Rectangle { radius: Theme.shapeExtraSmall; color: Theme.inverseSurface }
     }
 }

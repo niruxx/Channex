@@ -12,7 +12,7 @@ Item {
     z: -1
 
     // Flat by design: no gradient wash here - with backgroundTheme
-    // "none" (the default) the window's own flat Theme.canvas fill
+    // "none" (the default) the window's own flat Theme.surfaceContainer fill
     // (see Main.qml) is the entire background, exactly as a flat UI
     // calls for. The opt-in aurora/particles/grid themes below are the
     // only source of any motion or depth, unchanged.
@@ -32,7 +32,7 @@ Item {
                 width: root.width * 0.55
                 height: width
                 radius: width / 2
-                color: index === 1 ? Theme.accent2 : Theme.accent
+                color: index === 1 ? Theme.tertiary : Theme.primary
                 x: baseX
                 y: baseY
 
@@ -67,7 +67,7 @@ Item {
         ItemParticle {
             delegate: Rectangle {
                 width: 4; height: 4; radius: 2
-                color: Theme.accent
+                color: Theme.primary
                 opacity: 0.6
             }
         }
@@ -101,7 +101,7 @@ Item {
         onPaint: {
             var ctx = getContext("2d")
             ctx.reset()
-            ctx.strokeStyle = Theme.accent
+            ctx.strokeStyle = Theme.primary
             ctx.globalAlpha = 0.16
             ctx.lineWidth = 1
             var step = 42

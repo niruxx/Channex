@@ -5,350 +5,274 @@ import QtQuick.Dialogs
 import Channex
 import "../components"
 
-// Mirrors src/components/settings/SettingsPanel.tsx (+ ThemePicker,
-// AccentPicker, BackgroundPicker). Laid out as a centered, max-width
-// column of section "cards" rather than a flat left-aligned list, so it
-// reads as a real settings page instead of a stack of controls jammed
-// in the corner.
+// Settings page: a centered, max-width column of M3 settings groups
+// (SettingsSection / SettingsRow). Choices use segmented buttons or
+// filter chips, booleans use switches.
 Flickable {
     id: root
     contentWidth: width
     contentHeight: centeredColumn.implicitHeight + 64
     clip: true
     boundsBehavior: Flickable.StopAtBounds
-    ScrollBar.vertical: ScrollBar {}
+    ScrollBar.vertical: AppScrollBar {}
 
-    readonly property int cardWidth: Math.min(640, width - 48)
+    readonly property int cardWidth: Math.min(720, width - 64)
 
-    Column {
+    ColumnLayout {
         id: centeredColumn
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: 32
+        x: Math.round((root.width - width) / 2)
+        y: 36
         width: root.cardWidth
-        spacing: 20
+        spacing: 28
 
         // ---- Header ----
-        RowLayout {
-            width: parent.width
-            spacing: 12
-
-            Image {
-                Layout.preferredWidth: 40
-                Layout.preferredHeight: 40
-                source: "qrc:/qt/qml/Channex/resources/icons/app.svg"
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-            }
-            ColumnLayout {
-                spacing: 2
-                Text { text: "Settings"; color: Theme.ink; font.bold: true; font.pixelSize: 22 }
-                Text { text: "Appearance, content, downloads, and sites"; color: Theme.inkFaint; font.pixelSize: 13 }
-            }
-            Item { Layout.fillWidth: true }
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 4
+            spacing: 4
+            Text { text: "Settings"; color: Theme.onSurfaceColor; font.pixelSize: Theme.headlineMedium }
+            Text { text: "Appearance, content, downloads, and sites"; color: Theme.onSurfaceVariantColor; font.pixelSize: Theme.bodyLarge }
         }
 
         // ---- Appearance ----
-        Rectangle {
-            width: parent.width
-            height: appearanceCol.implicitHeight + 32
-            radius: Theme.radiusLg
-            color: Theme.surface
-            border.color: Theme.border
+        SettingsSection {
+            Layout.fillWidth: true
+            title: "Appearance"
+            iconName: "palette"
 
-            ColumnLayout {
-                id: appearanceCol
-                x: 20; y: 16
-                width: parent.width - 40
-                spacing: 14
-
-                Text { text: "Appearance"; color: Theme.ink; font.bold: true; font.pixelSize: 15 }
-
-                ColumnLayout {
-                    spacing: 6
-                    Text { text: "Theme"; color: Theme.inkDim; font.pixelSize: 12 }
-                    RowLayout {
-                        spacing: 6
-                        Repeater {
-                            model: ["dark", "light", "system"]
-                            delegate: AppButton {
-                                text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
-                                checkable: true
-                                checked: SettingsManager.theme === modelData
-                                onClicked: SettingsManager.theme = modelData
-                            }
-                        }
-                    }
+            SettingsRow {
+                divider: false
+                title: "Theme"
+                supportingText: "Material color scheme generated from your accent"
+                trailing: SegmentedButtons {
+                    model: [
+                        { value: "light", label: "Light" },
+                        { value: "dark", label: "Dark" },
+                        { value: "system", label: "System" },
+                    ]
+                    current: SettingsManager.theme
+                    onActivated: (v) => SettingsManager.theme = v
                 }
+            }
 
-                // Styled after 4chan's own theme-selector footer - a
-                // plain list of named links, not a swatch grid - with a
-                // small color dot added as a preview of each skin's
-                // signature accent. Picking one of these also overrides
-                // the accent color above with that skin's traditional
-                // link color (see Theme.qml) for the full authentic
-                // look, not just a background tint.
-                ColumnLayout {
-                    spacing: 6
-                    Text { text: "Classic imageboard skins"; color: Theme.inkDim; font.pixelSize: 12 }
-                    Flow {
-                        Layout.fillWidth: true
-                        spacing: 16
-                        Repeater {
-                            model: Theme.chanThemeIds
-                            delegate: Item {
-                                id: themeDelegate
-                                implicitWidth: themeRow.implicitWidth
-                                implicitHeight: themeRow.implicitHeight
-                                readonly property bool current: SettingsManager.theme === modelData
+            SettingsRow {
+                title: "Accent color"
+                supportingText: Theme.isChanTheme ? "Classic skins use their own traditional colors" : "Seeds the whole palette"
 
-                                // RowLayout, not Row: Row positioners
-                                // don't allow anchoring (incl.
-                                // verticalCenter) on their children at
-                                // all - it silently breaks their
-                                // layout - so vertical centering here
-                                // needs Layout.alignment instead.
-                                RowLayout {
-                                    id: themeRow
-                                    spacing: 6
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: 12
+                    opacity: Theme.isChanTheme ? 0.45 : 1
+                    Repeater {
+                        model: Theme.accentPresets
+                        delegate: Rectangle {
+                            id: swatch
+                            readonly property bool current: SettingsManager.accentColor === modelData.value
+                            width: 40; height: 40; radius: 20
+                            color: modelData.value
+                            border.width: current ? 3 : 0
+                            border.color: Theme.surfaceContainerLow
 
-                                    Rectangle {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        width: 11; height: 11; radius: 5
-                                        color: Theme.chanPalettes[modelData].accent
-                                        border.width: 1
-                                        border.color: Theme.chanPalettes[modelData].border
-                                    }
-                                    Text {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        text: Theme.chanThemeNames[modelData]
-                                        color: themeDelegate.current ? Theme.accent : Theme.inkDim
-                                        font.pixelSize: 12
-                                        font.bold: themeDelegate.current
-                                        font.underline: themeHover.hovered
-                                    }
-                                }
-                                HoverHandler { id: themeHover }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: SettingsManager.theme = modelData
+                            // Outer selection ring.
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: -3
+                                radius: width / 2
+                                color: "transparent"
+                                border.width: 2
+                                border.color: Theme.onSurfaceColor
+                                visible: swatch.current
+                            }
+                            AppIcon {
+                                anchors.centerIn: parent
+                                visible: swatch.current
+                                name: "check"
+                                iconSize: 18
+                                color: Theme.lstar(Qt.color(modelData.value)) > 60 ? "#000000" : "#ffffff"
+                            }
+                            StateLayer { radius: 20; layerColor: "#ffffff"; hovered: swatchHover.hovered }
+                            HoverHandler { id: swatchHover }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    SettingsManager.accentColor = modelData.value
+                                    if (Theme.isChanTheme) SettingsManager.theme = "system"
                                 }
                             }
-                        }
-                    }
-                }
-
-                ColumnLayout {
-                    spacing: 6
-                    Text { text: "Accent color"; color: Theme.inkDim; font.pixelSize: 12 }
-                    Row {
-                        spacing: 10
-                        Repeater {
-                            model: Theme.accentPresets
-                            delegate: Rectangle {
-                                width: 28; height: 28; radius: 14
-                                color: modelData.value
-                                border.width: SettingsManager.accentColor === modelData.value ? 3 : 0
-                                border.color: Theme.ink
-                                scale: swatchHover.hovered ? 1.12 : 1.0
-                                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
-                                HoverHandler { id: swatchHover }
-                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: SettingsManager.accentColor = modelData.value }
+                            ToolTip {
+                                visible: swatchHover.hovered
+                                delay: 500
+                                text: modelData.name
+                                padding: 8; topPadding: 4; bottomPadding: 4
+                                contentItem: Text { text: modelData.name; color: Theme.inverseOnSurface; font.pixelSize: Theme.bodySmall }
+                                background: Rectangle { radius: Theme.shapeExtraSmall; color: Theme.inverseSurface }
                             }
                         }
                     }
                 }
+            }
 
-                ColumnLayout {
-                    spacing: 6
-                    Text { text: "Animated background"; color: Theme.inkDim; font.pixelSize: 12 }
-                    RowLayout {
-                        spacing: 6
-                        Repeater {
-                            model: ["none", "aurora", "particles", "grid"]
-                            delegate: AppButton {
-                                text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
-                                checkable: true
-                                checked: SettingsManager.backgroundTheme === modelData
-                                onClicked: SettingsManager.backgroundTheme = modelData
-                            }
+            // Styled after 4chan's own theme-selector footer: a set of
+            // named skins, each with its signature accent as a swatch.
+            // Picking one replaces the generated scheme with that
+            // skin's authentic surfaces + link color (see Theme.qml).
+            SettingsRow {
+                title: "Classic imageboard skins"
+                supportingText: "Authentic 4chan-style palettes"
+
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Repeater {
+                        model: Theme.chanThemeIds
+                        delegate: AppChip {
+                            text: Theme.chanThemeNames[modelData]
+                            swatch: Theme.chanPalettes[modelData].accent
+                            checkable: true
+                            checked: SettingsManager.theme === modelData
+                            onClicked: SettingsManager.theme = checked ? "system" : modelData
                         }
                     }
                 }
+            }
 
-                ColumnLayout {
-                    spacing: 6
-                    Text { text: "Catalog view"; color: Theme.inkDim; font.pixelSize: 12 }
-                    RowLayout {
-                        spacing: 6
-                        Repeater {
-                            model: [
-                                { mode: "grid", icon: "grid", label: "Grid" },
-                                { mode: "compact", icon: "rows", label: "Compact" },
-                                { mode: "list", icon: "list", label: "List" },
-                            ]
-                            delegate: AppButton {
-                                text: modelData.label
-                                iconName: modelData.icon
-                                checkable: true
-                                checked: SettingsManager.catalogViewMode === modelData.mode
-                                onClicked: SettingsManager.catalogViewMode = modelData.mode
-                            }
-                        }
-                    }
+            SettingsRow {
+                title: "Animated background"
+                trailing: SegmentedButtons {
+                    model: [
+                        { value: "none", label: "None" },
+                        { value: "aurora", label: "Aurora" },
+                        { value: "particles", label: "Particles" },
+                        { value: "grid", label: "Grid" },
+                    ]
+                    current: SettingsManager.backgroundTheme
+                    onActivated: (v) => SettingsManager.backgroundTheme = v
                 }
+            }
 
-                ColumnLayout {
-                    spacing: 6
-                    Text { text: "Reply style"; color: Theme.inkDim; font.pixelSize: 12 }
-                    RowLayout {
-                        spacing: 6
-                        Repeater {
-                            model: [
-                                { mode: "compact", label: "Compact" },
-                                { mode: "standard", label: "Standard" },
-                                { mode: "modern", label: "Modern" },
-                            ]
-                            delegate: AppButton {
-                                text: modelData.label
-                                checkable: true
-                                checked: SettingsManager.replyDisplayStyle === modelData.mode
-                                onClicked: SettingsManager.replyDisplayStyle = modelData.mode
-                            }
-                        }
-                    }
+            SettingsRow {
+                title: "Catalog view"
+                trailing: SegmentedButtons {
+                    model: [
+                        { value: "grid", label: "Grid", icon: "grid" },
+                        { value: "compact", label: "Compact", icon: "rows" },
+                        { value: "list", label: "List", icon: "list" },
+                    ]
+                    current: SettingsManager.catalogViewMode
+                    onActivated: (v) => SettingsManager.catalogViewMode = v
+                }
+            }
+
+            SettingsRow {
+                title: "Reply style"
+                trailing: SegmentedButtons {
+                    model: [
+                        { value: "compact", label: "Compact" },
+                        { value: "standard", label: "Standard" },
+                        { value: "modern", label: "Modern" },
+                    ]
+                    current: SettingsManager.replyDisplayStyle
+                    onActivated: (v) => SettingsManager.replyDisplayStyle = v
                 }
             }
         }
 
         // ---- Content ----
-        Rectangle {
-            width: parent.width
-            height: contentCol.implicitHeight + 32
-            radius: Theme.radiusLg
-            color: Theme.surface
-            border.color: Theme.border
+        SettingsSection {
+            Layout.fillWidth: true
+            title: "Content"
+            iconName: "shield"
 
-            ColumnLayout {
-                id: contentCol
-                x: 20; y: 16
-                width: parent.width - 40
-                spacing: 10
-
-                Text { text: "Content"; color: Theme.ink; font.bold: true; font.pixelSize: 15 }
-                AppCheckBox { text: "Blur NSFW thumbnails and spoilers until tapped"; checked: SettingsManager.blurNsfw; onToggled: SettingsManager.blurNsfw = checked }
-                AppCheckBox { text: "Hide NSFW sites from the switcher"; checked: SettingsManager.hideNsfwSites; onToggled: SettingsManager.hideNsfwSites = checked }
-                AppCheckBox { text: "Mute WebMs/videos by default"; checked: SettingsManager.muteWebmsByDefault; onToggled: SettingsManager.muteWebmsByDefault = checked }
-                AppCheckBox { text: "Show birthday hats on October 1st"; checked: SettingsManager.birthdayHats; onToggled: SettingsManager.birthdayHats = checked }
+            SettingsRow {
+                divider: false
+                title: "Blur NSFW thumbnails and spoilers"
+                supportingText: "Tap a thumbnail to reveal it"
+                trailing: AppSwitch { checked: SettingsManager.blurNsfw; onToggled: SettingsManager.blurNsfw = checked }
+            }
+            SettingsRow {
+                title: "Hide NSFW sites"
+                supportingText: "Keep them out of the site switcher"
+                trailing: AppSwitch { checked: SettingsManager.hideNsfwSites; onToggled: SettingsManager.hideNsfwSites = checked }
+            }
+            SettingsRow {
+                title: "Mute videos by default"
+                trailing: AppSwitch { checked: SettingsManager.muteWebmsByDefault; onToggled: SettingsManager.muteWebmsByDefault = checked }
+            }
+            SettingsRow {
+                title: "Birthday hats on October 1st"
+                trailing: AppSwitch { checked: SettingsManager.birthdayHats; onToggled: SettingsManager.birthdayHats = checked }
             }
         }
 
         // ---- Downloads ----
-        Rectangle {
-            width: parent.width
-            height: downloadsCol.implicitHeight + 32
-            radius: Theme.radiusLg
-            color: Theme.surface
-            border.color: Theme.border
+        SettingsSection {
+            Layout.fillWidth: true
+            title: "Downloads"
+            iconName: "download"
 
-            ColumnLayout {
-                id: downloadsCol
-                x: 20; y: 16
-                width: parent.width - 40
-                spacing: 10
-
-                Text { text: "Downloads"; color: Theme.ink; font.bold: true; font.pixelSize: 15 }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 10
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: 36
-                        radius: Theme.radiusSm
-                        color: Theme.surface2
-                        border.color: Theme.border
-                        Text {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            verticalAlignment: Text.AlignVCenter
-                            text: SettingsManager.downloadDir.length ? SettingsManager.downloadDir : "No folder chosen"
-                            color: Theme.inkDim
-                            elide: Text.ElideMiddle
-                        }
-                    }
-                    AppButton { text: "Choose…"; iconName: "folder"; onClicked: folderDialog.open() }
-                }
+            SettingsRow {
+                divider: false
+                title: "Download folder"
+                supportingText: SettingsManager.downloadDir.length ? SettingsManager.downloadDir : "No folder chosen"
+                trailing: AppButton { variant: "tonal"; text: "Choose"; iconName: "folder"; onClicked: folderDialog.open() }
             }
         }
 
         // ---- Custom sites ----
-        Rectangle {
-            width: parent.width
-            height: sitesCol.implicitHeight + 32
-            radius: Theme.radiusLg
-            color: Theme.surface
-            border.color: Theme.border
+        SettingsSection {
+            Layout.fillWidth: true
+            title: "Custom sites"
+            iconName: "globe"
 
-            ColumnLayout {
-                id: sitesCol
-                x: 20; y: 16
-                width: parent.width - 40
-                spacing: 10
+            SettingsRow {
+                divider: false
+                visible: SettingsManager.customSites.length === 0
+                title: "No custom sites"
+                supportingText: "Add one with the + button in the site switcher."
+            }
 
-                Text { text: "Custom sites"; color: Theme.ink; font.bold: true; font.pixelSize: 15 }
-                Repeater {
-                    model: SettingsManager.customSites
-                    delegate: RowLayout {
-                        Layout.fillWidth: true
-                        Text { text: modelData.name; color: Theme.ink; Layout.fillWidth: true }
-                        AppButton { text: "Remove"; flat: true; onClicked: SitesController.removeCustomSite(modelData.id) }
+            Repeater {
+                model: SettingsManager.customSites
+                delegate: SettingsRow {
+                    divider: index > 0
+                    title: modelData.name
+                    supportingText: modelData.origin || ""
+                    trailing: AppButton {
+                        variant: "icon"
+                        iconName: "trash"
+                        tooltip: "Remove site"
+                        onClicked: SitesController.removeCustomSite(modelData.id)
                     }
-                }
-                Text {
-                    visible: SettingsManager.customSites.length === 0
-                    text: "Add one from the \"+\" button next to the site switcher."
-                    color: Theme.inkFaint
-                    font.pixelSize: 12
                 }
             }
         }
 
         // ---- Boards ----
-        Rectangle {
-            width: parent.width
-            height: boardsCol.implicitHeight + 32
-            radius: Theme.radiusLg
-            color: Theme.surface
-            border.color: Theme.border
+        SettingsSection {
+            Layout.fillWidth: true
+            title: "Boards"
+            iconName: "list"
 
-            ColumnLayout {
-                id: boardsCol
-                x: 20; y: 16
-                width: parent.width - 40
-                spacing: 10
-
-                Text { text: "Boards"; color: Theme.ink; font.bold: true; font.pixelSize: 15 }
-                Text {
-                    Layout.fillWidth: true
-                    wrapMode: Text.WordWrap
-                    color: Theme.inkDim
-                    font.pixelSize: 12
-                    text: "Hide specific boards from a site's list in the sidebar."
-                }
+            SettingsRow {
+                divider: false
+                title: "Sidebar boards"
+                supportingText: "Hide specific boards from a site's list in the navigation drawer."
 
                 AppComboBox {
                     id: boardsSiteBox
                     Layout.fillWidth: true
+                    label: "Site"
                     model: SitesController.sites.map(function (s) { return s.name })
                 }
 
                 ListView {
                     id: boardsManageList
                     Layout.fillWidth: true
-                    Layout.preferredHeight: Math.min(280, contentHeight)
+                    Layout.preferredHeight: Math.max(48, Math.min(320, contentHeight))
                     clip: true
-                    spacing: 2
+                    spacing: 0
+                    ScrollBar.vertical: AppScrollBar {}
 
                     readonly property var managedSite: SitesController.sites[boardsSiteBox.currentIndex] || null
 
@@ -383,46 +307,41 @@ Flickable {
                     // (see BoardList.qml) so checkboxes stay in sync
                     // with each other when toggled.
 
-                    delegate: RowLayout {
+                    delegate: AppCheckBox {
                         width: boardsManageList.width
                         readonly property var hiddenForManagedSite: SettingsManager.hiddenBoards[boardsManageList.managedSite ? boardsManageList.managedSite.id : ""] || []
-                        readonly property bool shown: hiddenForManagedSite.indexOf(modelData.code) === -1
-
-                        AppCheckBox {
-                            Layout.fillWidth: true
-                            text: "/" + modelData.code + "/  " + (modelData.title || "")
-                            checked: shown
-                            onToggled: SettingsManager.setBoardHidden(boardsManageList.managedSite.id, modelData.code, !checked)
-                        }
+                        text: "/" + modelData.code + "/  " + (modelData.title || "")
+                        checked: hiddenForManagedSite.indexOf(modelData.code) === -1
+                        onToggled: SettingsManager.setBoardHidden(boardsManageList.managedSite.id, modelData.code, !checked)
                     }
 
                     Text {
                         anchors.centerIn: parent
                         visible: boardsManageList.count === 0
                         text: "No boards yet - open this site once to discover its boards."
-                        color: Theme.inkFaint
-                        font.pixelSize: 12
+                        color: Theme.onSurfaceVariantColor
+                        font.pixelSize: Theme.bodyMedium
                     }
                 }
             }
         }
 
         AppButton {
-            anchors.horizontalCenter: parent.horizontalCenter
+            Layout.alignment: Qt.AlignHCenter
+            variant: "outlined"
             text: "Replay first-time setup"
-            flat: true
+            iconName: "refresh"
             onClicked: SettingsManager.hasCompletedOnboarding = false
         }
 
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.topMargin: 8
             spacing: 2
-            Text { Layout.alignment: Qt.AlignHCenter; text: "- niruxxdaboi -"; color: Theme.inkFaint; font.pixelSize: 12 }
-            Text { Layout.alignment: Qt.AlignHCenter; text: "QT6 - Ver. 0.1.2"; color: Theme.inkFaint; font.pixelSize: 11 }
+            Text { Layout.alignment: Qt.AlignHCenter; text: "niruxxdaboi"; color: Theme.outline; font.pixelSize: Theme.labelMedium; font.weight: Font.Medium }
+            Text { Layout.alignment: Qt.AlignHCenter; text: "Channex · Qt 6 · Ver. 0.1.2"; color: Theme.outline; font.pixelSize: Theme.labelSmall }
         }
 
-        Item { width: 1; height: 8 }
+        Item { Layout.preferredHeight: 8 }
     }
 
     FolderDialog {

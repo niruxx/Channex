@@ -1,33 +1,23 @@
 import QtQuick
 import QtQuick.Controls.Basic
+import QtQuick.Layouts
 import Channex
 
-// Mirrors src/components/catalog/ThreadCard.tsx: square thumbnail +
-// subject/excerpt + reply/image counts, sticky/closed badges, an
-// NSFW/spoiler blur-until-tapped overlay, and a bookmark toggle.
+// Catalog grid item as an M3 elevated card: surfaceContainerLow,
+// medium (12px) corners, a rounded thumbnail inset at the top, then
+// subject / excerpt / reply-image counts. Hover adds the state layer
+// and lifts the elevation; sticky/closed show as small badges on the
+// thumbnail, and the bookmark toggle is an icon button over it.
 Rectangle {
     id: root
     required property var post
     property bool compact: false
     property var site: ({})
 
-    radius: Theme.radiusMd
-    color: cardHover.hovered ? Theme.surface3 : Theme.surface2
-    border.width: cardHover.hovered ? 2 : 1
-    border.color: cardHover.hovered ? Theme.accent : Theme.borderSoft
-    scale: cardHover.hovered ? 1.015 : 1.0
-    clip: true
+    signal opened()
 
-    // A CardShadow here would overflow into neighboring grid cells in
-    // a densely packed catalog grid, so depth on hover comes from an
-    // accent-colored border + a slight lift instead - both stay fully
-    // within the card's own bounds.
-    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on border.color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on border.width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-
-    HoverHandler { id: cardHover }
+    radius: Theme.shapeMedium
+    color: Theme.surfaceContainerLow
 
     // post itself has no thumbUrl/spoiler - those live on its first file.
     readonly property var firstFile: (post.files && post.files.length > 0) ? post.files[0] : null
@@ -39,118 +29,131 @@ Rectangle {
     readonly property bool bookmarked: BookmarksController.bookmarks.length >= 0
         && BookmarksController.isBookmarked(site.id, NavigationController.boardCode, String(post.threadId))
 
-    signal opened()
+    CardShadow { radius: root.radius; level: cardHover.hovered ? 2 : 1 }
 
-    Column {
+    HoverHandler { id: cardHover }
+
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.shouldBlur ? (root.revealed = true) : root.opened()
+    }
+
+    ColumnLayout {
         anchors.fill: parent
         anchors.margins: 8
-        spacing: 6
+        spacing: 0
 
-        Rectangle {
-            width: parent.width
-            height: width
-            radius: Theme.radiusSm
-            color: Theme.surface3
-            clip: true
+        RoundedImage {
+            id: thumb
+            Layout.fillWidth: true
+            Layout.preferredHeight: width
+            radius: Theme.shapeSmall
+            maskColor: root.color
+            source: root.firstFile ? (root.firstFile.thumbUrl || "") : ""
+            hideImage: root.shouldBlur
 
-            Image {
-                anchors.fill: parent
-                source: root.firstFile ? (root.firstFile.thumbUrl || "") : ""
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                visible: !root.shouldBlur
+            AppIcon {
+                anchors.centerIn: parent
+                visible: !root.firstFile
+                name: "image"
+                iconSize: 32
+                color: Theme.outline
             }
 
+            // Blur stand-in: scrim + label until tapped.
             Rectangle {
                 anchors.fill: parent
-                color: "black"
-                opacity: root.shouldBlur ? 0.85 : 0
+                radius: thumb.radius
+                color: Theme.surfaceContainerHighest
+                opacity: root.shouldBlur ? 1 : 0
                 visible: opacity > 0
-                Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                Text {
+                Behavior on opacity { NumberAnimation { duration: Theme.durMedium } }
+                Column {
                     anchors.centerIn: parent
-                    text: "Tap to reveal"
-                    color: "white"
-                    font.pixelSize: 11
+                    spacing: 6
+                    AppIcon { anchors.horizontalCenter: parent.horizontalCenter; name: "shield"; iconSize: 24; color: Theme.onSurfaceVariantColor }
+                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: "Tap to reveal"; color: Theme.onSurfaceVariantColor; font.pixelSize: Theme.labelMedium; font.weight: Font.Medium }
                 }
             }
 
             Row {
                 anchors.top: parent.top
                 anchors.left: parent.left
-                anchors.margins: 4
+                anchors.margins: 8
                 spacing: 4
-                Rectangle {
-                    visible: post.sticky
-                    color: "#00000099"; radius: 4; width: 18; height: 18
-                    Text { anchors.centerIn: parent; text: "📌"; font.pixelSize: 10 }
-                }
-                Rectangle {
-                    visible: post.closed
-                    color: "#00000099"; radius: 4; width: 18; height: 18
-                    Text { anchors.centerIn: parent; text: "🔒"; font.pixelSize: 10 }
+                Repeater {
+                    model: [ { show: post.sticky, icon: "pin" }, { show: post.closed, icon: "lock" } ]
+                    delegate: Rectangle {
+                        visible: modelData.show === true
+                        width: 24; height: 24; radius: 12
+                        color: Theme.tertiaryContainer
+                        AppIcon { anchors.centerIn: parent; name: modelData.icon; iconSize: 14; color: Theme.onTertiaryContainerColor }
+                    }
                 }
             }
 
-            Rectangle {
+            AppButton {
                 anchors.top: parent.top
                 anchors.right: parent.right
                 anchors.margins: 4
-                radius: 9
-                color: root.bookmarked ? Theme.accent : "#00000099"
-                width: 22; height: 22
-
-                Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
-
-                AppIcon {
-                    anchors.centerIn: parent
-                    name: root.bookmarked ? "bookmark-fill" : "bookmark"
-                    iconSize: 12
-                    color: root.bookmarked ? "#0c0e11" : "white"
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: BookmarksController.toggle({
-                        siteId: root.site.id, boardCode: NavigationController.boardCode,
-                        threadId: String(post.threadId), subject: post.subject,
-                        thumbUrl: root.firstFile ? root.firstFile.thumbUrl : "", replyCount: post.replyCount,
-                    })
-                }
+                compact: true
+                variant: root.bookmarked ? "filledIcon" : "tonalIcon"
+                onMedia: !root.bookmarked
+                iconName: root.bookmarked ? "bookmark-fill" : "bookmark"
+                tooltip: root.bookmarked ? "Remove bookmark" : "Bookmark"
+                opacity: root.bookmarked || cardHover.hovered ? 1 : 0
+                visible: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: Theme.durShort } }
+                onClicked: BookmarksController.toggle({
+                    siteId: root.site.id, boardCode: NavigationController.boardCode,
+                    threadId: String(post.threadId), subject: post.subject,
+                    thumbUrl: root.firstFile ? root.firstFile.thumbUrl : "", replyCount: post.replyCount,
+                })
             }
         }
 
         Text {
-            width: parent.width
-            text: post.subject || ("Thread #" + post.threadId)
-            color: Theme.ink
-            font.pixelSize: 13
-            font.bold: true
+            Layout.fillWidth: true
+            Layout.topMargin: 10
+            Layout.leftMargin: 4
+            Layout.rightMargin: 4
+            text: post.subject || ("Thread " + post.threadId)
+            color: Theme.onSurfaceColor
+            font.pixelSize: Theme.titleSmall
+            font.weight: Font.Medium
             elide: Text.ElideRight
             maximumLineCount: 1
         }
 
         Text {
-            width: parent.width
+            Layout.fillWidth: true
+            Layout.topMargin: 4
+            Layout.leftMargin: 4
+            Layout.rightMargin: 4
             visible: !root.compact
-            text: post.commentHtml ? post.commentHtml.replace(/<[^>]*>/g, "") : ""
-            color: Theme.inkDim
-            font.pixelSize: 12
+            text: Theme.plainText(post.commentHtml)
+            color: Theme.onSurfaceVariantColor
+            font.pixelSize: Theme.bodySmall
+            lineHeight: 1.15
             wrapMode: Text.WordWrap
             maximumLineCount: 3
             elide: Text.ElideRight
         }
 
-        Row {
-            spacing: 10
-            Text { text: "💬 " + post.replyCount; color: Theme.inkFaint; font.pixelSize: 11 }
-            Text { text: "🖼 " + post.imageCount; color: Theme.inkFaint; font.pixelSize: 11 }
+        Item { Layout.fillHeight: true }
+
+        PostStats {
+            Layout.leftMargin: 4
+            Layout.bottomMargin: 2
+            replies: post.replyCount
+            images: post.imageCount
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.shouldBlur ? (root.revealed = true) : root.opened()
+    StateLayer {
+        hovered: cardHover.hovered
+        layerColor: Theme.onSurfaceColor
+        z: 10
     }
 }

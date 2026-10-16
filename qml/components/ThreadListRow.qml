@@ -1,25 +1,17 @@
 import QtQuick
+import QtQuick.Layouts
 import Channex
 
-// Mirrors src/components/catalog/ThreadListRow.tsx: single-line
-// subject+excerpt with an 80x80 thumbnail, used by the "list" catalog
-// view mode.
+// "list" catalog mode row as an M3 list item inside a filled card:
+// rounded 72px thumbnail, subject (titleSmall), two-line excerpt, and
+// counts; hover state layer.
 Rectangle {
     id: root
     required property var post
     property var site: ({})
-    height: 88
-    radius: Theme.radiusMd
-    color: rowHover.hovered ? Theme.surface3 : Theme.surface2
-    border.width: rowHover.hovered ? 2 : 1
-    border.color: rowHover.hovered ? Theme.accent : Theme.borderSoft
-    clip: true
-
-    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on border.color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on border.width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-
-    HoverHandler { id: rowHover }
+    height: 96
+    radius: Theme.shapeMedium
+    color: Theme.surfaceContainerLow
 
     signal opened()
 
@@ -28,61 +20,67 @@ Rectangle {
     readonly property bool shouldBlur: (site.nsfw || (firstFile && firstFile.spoiler)) && SettingsManager.blurNsfw && !revealed
     property bool revealed: false
 
-    Row {
-        anchors.fill: parent
-        anchors.margins: 8
-        spacing: 10
+    HoverHandler { id: rowHover }
 
-        Rectangle {
-            width: 72; height: 72; radius: Theme.radiusSm
-            color: Theme.surface3
-            clip: true
-            Image {
-                anchors.fill: parent
-                source: root.firstFile ? (root.firstFile.thumbUrl || "") : ""
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                visible: !root.shouldBlur
-            }
-            Rectangle {
-                anchors.fill: parent
-                color: "black"
-                opacity: root.shouldBlur ? 0.85 : 0
-                visible: opacity > 0
-                Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+    RowLayout {
+        anchors.fill: parent
+        anchors.margins: 12
+        spacing: 16
+
+        RoundedImage {
+            Layout.preferredWidth: 72
+            Layout.preferredHeight: 72
+            radius: Theme.shapeSmall
+            maskColor: root.color
+            source: root.firstFile ? (root.firstFile.thumbUrl || "") : ""
+            hideImage: root.shouldBlur
+
+            AppIcon {
+                anchors.centerIn: parent
+                visible: root.shouldBlur || !root.firstFile
+                name: root.shouldBlur ? "shield" : "image"
+                iconSize: 22
+                color: Theme.onSurfaceVariantColor
             }
         }
 
-        Column {
-            width: parent.width - 90
+        ColumnLayout {
+            Layout.fillWidth: true
             spacing: 4
-            Text {
-                width: parent.width
-                text: post.subject || ("Thread #" + post.threadId)
-                color: Theme.ink
-                font.bold: true
-                font.pixelSize: 13
-                elide: Text.ElideRight
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
+                AppIcon { visible: post.sticky === true; name: "pin"; iconSize: 14; color: Theme.tertiary }
+                AppIcon { visible: post.closed === true; name: "lock"; iconSize: 14; color: Theme.tertiary }
+                Text {
+                    Layout.fillWidth: true
+                    text: post.subject || ("Thread " + post.threadId)
+                    color: Theme.onSurfaceColor
+                    font.pixelSize: Theme.titleSmall
+                    font.weight: Font.Medium
+                    elide: Text.ElideRight
+                }
             }
             Text {
-                width: parent.width
-                text: post.commentHtml ? post.commentHtml.replace(/<[^>]*>/g, "") : ""
-                color: Theme.inkDim
-                font.pixelSize: 12
+                Layout.fillWidth: true
+                text: Theme.plainText(post.commentHtml)
+                color: Theme.onSurfaceVariantColor
+                font.pixelSize: Theme.bodyMedium
                 elide: Text.ElideRight
-                maximumLineCount: 2
+                maximumLineCount: 1
                 wrapMode: Text.WordWrap
             }
-            Row {
-                spacing: 10
-                Text { text: "💬 " + post.replyCount; color: Theme.inkFaint; font.pixelSize: 11 }
-                Text { text: "🖼 " + post.imageCount; color: Theme.inkFaint; font.pixelSize: 11 }
-            }
+            PostStats { replies: post.replyCount; images: post.imageCount }
         }
     }
 
+    StateLayer { hovered: rowHover.hovered; pressed: rowMouse.pressed; z: 10 }
+
     MouseArea {
+        id: rowMouse
         anchors.fill: parent
+        z: 11
         cursorShape: Qt.PointingHandCursor
         onClicked: root.shouldBlur ? (root.revealed = true) : root.opened()
     }

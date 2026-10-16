@@ -9,32 +9,35 @@ import Channex
 // platform-ordered window controls (mac: traffic lights on the left;
 // win/linux: rectangular controls on the right).
 //
-// Flush, flat, and plain: a solid-color bar the full width of the
-// window with a single 1px divider below it - no inset margins, no
-// card radius of its own, no chip/pill containers. Its top corners
-// don't need an explicit radius to match the window's rounded shape
-// either: main.cpp clips the whole window to a rounded region on
-// Windows (SetWindowRgn), and that clip applies to everything
-// underneath it, this bar included, regardless of what shape is
-// actually drawn here.
+// Styled as an M3 small top app bar sitting on the window's
+// surfaceContainer background (no divider - the raised content pane
+// below provides the separation): app mark + name, a back icon
+// button, the current location as a title, window controls. Its top
+// corners don't need an explicit radius to match the window's rounded
+// shape: main.cpp clips the whole window to a rounded region on
+// Windows (SetWindowRgn), and that clip applies to this bar too.
 Item {
     id: root
     required property var targetWindow
-    height: 52
+    height: 60
 
     readonly property bool isMac: Qt.platform.os === "osx"
     readonly property bool isWindows: Qt.platform.os === "windows"
     readonly property var currentSite: SitesController.findSite(NavigationController.siteId)
 
-    readonly property string breadcrumb: {
+    readonly property bool inSiteView: NavigationController.view === "catalog" || NavigationController.view === "thread"
+    readonly property string siteName: currentSite.name || NavigationController.siteId
+
+    readonly property string title: {
         switch (NavigationController.view) {
         case "bookmarks": return "Bookmarks"
         case "downloads": return "Downloads"
         case "settings": return "Settings"
-        case "thread": return (currentSite.name || NavigationController.siteId) + " / " + NavigationController.boardCode + " / Thread #" + NavigationController.threadId
-        default: return (currentSite.name || NavigationController.siteId) + (NavigationController.boardCode ? " / " + NavigationController.boardCode : "")
+        case "thread": return "/" + NavigationController.boardCode + "/ · Thread " + NavigationController.threadId
+        default: return NavigationController.boardCode ? "/" + NavigationController.boardCode + "/" : root.siteName
         }
     }
+    readonly property string subtitle: inSiteView ? siteName : ""
 
     // Drag region - sits behind the interactive controls (they're
     // instantiated after this in the RowLayout below, so they win
@@ -163,43 +166,60 @@ Item {
         }
     }
 
-    Rectangle {
-        anchors.fill: parent
-        color: Theme.surface
-    }
-
-    Rectangle {
-        anchors.bottom: parent.bottom
-        width: parent.width
-        height: 1
-        color: Theme.borderSoft
-    }
-
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: root.isMac ? 14 : 16
-        anchors.rightMargin: 14
-        spacing: 12
+        anchors.leftMargin: root.isMac ? 16 : 20
+        anchors.rightMargin: 12
+        spacing: 8
 
         WindowControls { targetWindow: root.targetWindow; visible: root.isMac }
 
+        // Brand block - lines up with the navigation drawer below it.
+        // Explicit fillWidth: false - a RowLayout child that itself holds
+        // a fillWidth item would otherwise inherit fillWidth and grab
+        // half the bar.
+        RowLayout {
+            Layout.fillWidth: false
+            Layout.preferredWidth: root.isMac ? 160 : 236
+            Layout.maximumWidth: Layout.preferredWidth
+            spacing: 10
+
+            Rectangle {
+                implicitWidth: 32; implicitHeight: 32; radius: Theme.shapeMedium
+                color: Theme.primaryContainer
+                Image {
+                    anchors.centerIn: parent
+                    width: 20; height: 20
+                    source: "qrc:/qt/qml/Channex/resources/icons/app.svg"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                }
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "Channex"
+                color: Theme.onSurfaceColor
+                font.pixelSize: Theme.titleLarge
+                font.weight: Font.Medium
+                elide: Text.ElideRight
+            }
+        }
+
         AppButton {
-            flat: true
+            variant: "icon"
             iconName: "chevron-left"
+            tooltip: "Back"
             enabled: NavigationController.canGoBack
-            opacity: enabled ? 1 : 0.35
-            Behavior on opacity { NumberAnimation { duration: 120 } }
             onClicked: NavigationController.back()
         }
 
-        // Plain flat-color site avatar - no ring, no gradient, just a
-        // solid rounded square with an initial or favicon.
+        // Site avatar - matches the selected avatar in the drawer.
         Rectangle {
-            width: 24; height: 24
-            radius: Theme.radiusSm
-            color: root.currentSite.accent || Theme.accent
+            visible: root.inSiteView
+            implicitWidth: 32; implicitHeight: 32
+            radius: Theme.shapeMedium
+            color: Theme.primaryContainer
             clip: true
-            visible: NavigationController.view !== "bookmarks" && NavigationController.view !== "downloads" && NavigationController.view !== "settings"
 
             readonly property bool hasFavicon: !!root.currentSite.favicon && root.currentSite.favicon.length > 0
 
@@ -207,15 +227,15 @@ Item {
                 anchors.centerIn: parent
                 visible: !parent.hasFavicon || favicon.status !== Image.Ready
                 text: (root.currentSite.name || "?").charAt(0).toUpperCase()
-                color: "#0c0e11"
-                font.pixelSize: 11
-                font.bold: true
+                color: Theme.onPrimaryContainerColor
+                font.pixelSize: Theme.titleSmall
+                font.weight: Font.Bold
             }
 
             Image {
                 id: favicon
                 anchors.centerIn: parent
-                width: 16; height: 16
+                width: 18; height: 18
                 visible: parent.hasFavicon && status === Image.Ready
                 source: parent.hasFavicon ? root.currentSite.favicon : ""
                 fillMode: Image.PreserveAspectFit
@@ -224,13 +244,26 @@ Item {
             }
         }
 
-        // Plain breadcrumb text - no chip/pill background.
-        Text {
+        ColumnLayout {
             Layout.fillWidth: true
-            text: root.breadcrumb
-            color: Theme.ink
-            font.pixelSize: 13
-            elide: Text.ElideMiddle
+            Layout.leftMargin: 4
+            spacing: 0
+            Text {
+                Layout.fillWidth: true
+                text: root.title
+                color: Theme.onSurfaceColor
+                font.pixelSize: Theme.titleMedium
+                font.weight: Font.Medium
+                elide: Text.ElideMiddle
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: root.subtitle.length > 0
+                text: root.subtitle
+                color: Theme.onSurfaceVariantColor
+                font.pixelSize: Theme.bodySmall
+                elide: Text.ElideRight
+            }
         }
 
         WindowControls { targetWindow: root.targetWindow; visible: !root.isMac }

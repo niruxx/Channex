@@ -31,24 +31,16 @@ Item {
         return minutes + ":" + (seconds < 10 ? "0" : "") + seconds
     }
 
+    // Near-opaque media backdrop (M3 media viewers sit on black, not
+    // a translucent scrim). Kept solid so RoundedImage corner masks in
+    // the filmstrip below can match it.
     Rectangle {
         anchors.fill: parent
-        color: "#000000"
-        opacity: 0.9
+        color: "#0a0a0a"
+        opacity: 0.97
         MouseArea {
             anchors.fill: parent
             onClicked: LightboxController.close()
-        }
-    }
-
-    // Subtle top/bottom vignette for a touch more cinematic depth than
-    // a single flat backdrop.
-    Rectangle {
-        anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#00000055" }
-            GradientStop { position: 0.5; color: "transparent" }
-            GradientStop { position: 1.0; color: "#00000055" }
         }
     }
 
@@ -58,22 +50,23 @@ Item {
         visible: !root.isVideo
         clip: true
 
-        BusyIndicator {
+        AppBusyIndicator {
             anchors.centerIn: parent
+            color: Theme.inversePrimary
             running: LightboxController.loadState === "loading"
-            visible: running
         }
 
         Column {
             anchors.centerIn: parent
             visible: LightboxController.loadState === "error"
-            spacing: 10
-            Text { text: "Couldn't load this file."; color: "white"; anchors.horizontalCenter: parent.horizontalCenter }
+            spacing: 16
+            AppIcon { anchors.horizontalCenter: parent.horizontalCenter; name: "alert"; iconSize: 40; color: "#ffffff" }
+            Text { text: "Couldn't load this file"; color: "white"; font.pixelSize: Theme.titleMedium; anchors.horizontalCenter: parent.horizontalCenter }
             Row {
                 spacing: 8
                 anchors.horizontalCenter: parent.horizontalCenter
-                AppButton { text: "Retry"; onClicked: LightboxController.open(LightboxController.files, LightboxController.index) }
-                AppButton { text: "Open in browser"; onClicked: ExternalReply.openUrl(root.file.url || "") }
+                AppButton { variant: "filled"; onMedia: true; text: "Retry"; iconName: "refresh"; onClicked: LightboxController.open(LightboxController.files, LightboxController.index) }
+                AppButton { variant: "outlined"; onMedia: true; text: "Open in browser"; iconName: "open-external"; onClicked: ExternalReply.openUrl(root.file.url || "") }
             }
         }
 
@@ -137,19 +130,20 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            anchors.margins: 10
-            height: 44
-            radius: Theme.radiusMd
-            color: "#000000b0"
+            anchors.margins: 12
+            height: 56
+            radius: 28
+            color: Qt.rgba(0, 0, 0, 0.62)
 
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 10
-                anchors.rightMargin: 10
-                spacing: 10
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                spacing: 12
 
                 AppButton {
-                    flat: true
+                    variant: "filledIcon"
+                    onMedia: true
                     iconName: player.playbackState === MediaPlayer.PlayingState ? "pause" : "play"
                     onClicked: player.playbackState === MediaPlayer.PlayingState ? player.pause() : player.play()
                 }
@@ -157,7 +151,8 @@ Item {
                 Text {
                     text: root.formatTime(player.position)
                     color: "white"
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.labelMedium
+                    font.weight: Font.Medium
                 }
 
                 Slider {
@@ -174,36 +169,52 @@ Item {
                         }
                     }
 
-                    background: Rectangle {
+                    // M3 slider: 16px rounded active/inactive tracks split
+                    // by a gap around a 4px vertical bar handle.
+                    background: Item {
                         x: seekSlider.leftPadding
                         y: seekSlider.topPadding + seekSlider.availableHeight / 2 - height / 2
                         width: seekSlider.availableWidth
-                        height: 4
-                        radius: 2
-                        color: "#ffffff33"
+                        height: 12
+                        readonly property real hx: seekSlider.visualPosition * (width - 4)
                         Rectangle {
-                            width: seekSlider.visualPosition * parent.width
+                            width: Math.max(0, parent.hx - 6)
                             height: parent.height
-                            radius: 2
-                            color: Theme.accent
+                            radius: 6
+                            topRightRadius: 2
+                            bottomRightRadius: 2
+                            color: Theme.inversePrimary
+                        }
+                        Rectangle {
+                            x: parent.hx + 10
+                            width: Math.max(0, parent.width - x)
+                            height: parent.height
+                            radius: 6
+                            topLeftRadius: 2
+                            bottomLeftRadius: 2
+                            color: "#ffffff38"
                         }
                     }
                     handle: Rectangle {
-                        x: seekSlider.leftPadding + seekSlider.visualPosition * (seekSlider.availableWidth - width)
+                        x: seekSlider.leftPadding + seekSlider.visualPosition * (seekSlider.availableWidth - 4)
                         y: seekSlider.topPadding + seekSlider.availableHeight / 2 - height / 2
-                        width: 12; height: 12; radius: 6
-                        color: Theme.accent
+                        width: seekSlider.pressed ? 2 : 4
+                        height: 32
+                        radius: 2
+                        color: Theme.inversePrimary
                     }
                 }
 
                 Text {
                     text: root.formatTime(player.duration)
                     color: "white"
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.labelMedium
+                    font.weight: Font.Medium
                 }
 
                 AppButton {
-                    flat: true
+                    variant: "icon"
+                    onMedia: true
                     iconName: audioOutput.muted ? "volume-mute" : "volume"
                     onClicked: audioOutput.muted = !audioOutput.muted
                 }
@@ -226,6 +237,8 @@ Item {
 
     // Nav arrows
     AppButton {
+        variant: "tonalIcon"
+        onMedia: true
         iconName: "chevron-left"
         visible: LightboxController.files.length > 1
         anchors.left: parent.left
@@ -234,6 +247,8 @@ Item {
         onClicked: LightboxController.prev()
     }
     AppButton {
+        variant: "tonalIcon"
+        onMedia: true
         iconName: "chevron-right"
         visible: LightboxController.files.length > 1
         anchors.right: parent.right
@@ -263,24 +278,24 @@ Item {
             id: thumbDelegate
             readonly property bool current: index === LightboxController.index
             width: 56; height: 56
-            radius: Theme.radiusSm
-            color: Theme.surface3
+            radius: Theme.shapeMedium
+            color: "transparent"
             border.width: current ? 2 : 0
-            border.color: Theme.accent
-            clip: true
-            scale: current ? 1.0 : 0.92
-            opacity: current ? 1.0 : 0.6
+            border.color: Theme.inversePrimary
+            scale: current ? 1.0 : 0.9
+            opacity: current ? 1.0 : 0.55
 
             Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Behavior on opacity { NumberAnimation { duration: 140 } }
             Behavior on border.color { ColorAnimation { duration: 140 } }
 
-            Image {
+            RoundedImage {
                 anchors.fill: parent
-                anchors.margins: thumbDelegate.current ? 0 : 2
+                anchors.margins: thumbDelegate.current ? 4 : 0
+                radius: thumbDelegate.current ? Theme.shapeSmall : Theme.shapeMedium
+                maskColor: "#0a0a0a"
+                placeholderColor: "#262626"
                 source: modelData.thumbUrl || ""
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
             }
 
             AppIcon {
@@ -308,6 +323,8 @@ Item {
         spacing: 8
 
         AppButton {
+            variant: "tonal"
+            onMedia: true
             text: "Queue"
             iconName: "plus"
             onClicked: DownloadManager.startJob("lightbox", SettingsManager.downloadDir.length ? SettingsManager.downloadDir : ".",
@@ -316,13 +333,16 @@ Item {
         AppButton {
             text: "Save to disk"
             iconName: "download"
-            checked: true
+            variant: "filled"
+            onMedia: true
             onClicked: DownloadManager.startJob("lightbox-save", SettingsManager.downloadDir.length ? SettingsManager.downloadDir : ".",
                 [{ url: root.file.url || "", fileName: root.file.name || "file" }])
         }
         AppButton {
             iconName: "x"
-            flat: true
+            variant: "tonalIcon"
+            onMedia: true
+            tooltip: "Close"
             onClicked: LightboxController.close()
         }
     }

@@ -3,19 +3,21 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Channex
 
-// Mirrors src/components/catalog/CatalogToolbar.tsx + ViewModeToggle.
+// M3 search bar + a sort chip (with menu) + view-mode segmented
+// buttons + refresh.
 RowLayout {
     id: root
     required property CatalogController controller
-    spacing: 8
+    spacing: 12
 
     AppTextField {
         id: searchField
         Layout.fillWidth: true
-        placeholderText: "Search this board… or paste a thread link"
+        Layout.maximumWidth: 720
+        variant: "search"
+        placeholderText: "Search this board, or paste a thread link"
         text: root.controller.searchQuery
         onTextEdited: root.controller.searchQuery = text
-        leftIcon: "search"
 
         // Paste a thread URL (4chan "/board/thread/id" or vichan/
         // LynxChan "/board/res/id.html") and hit Enter to jump straight
@@ -34,45 +36,44 @@ RowLayout {
         }
     }
 
-    AppComboBox {
-        implicitWidth: 140
-        model: ["Latest", "Replies", "Images", "Oldest"]
+    Item { Layout.fillWidth: true }
+
+    AppChip {
+        id: sortChip
         readonly property var modes: ["bump", "replies", "images", "oldest"]
-        currentIndex: modes.indexOf(root.controller.sortMode)
-        onActivated: root.controller.sortMode = modes[currentIndex]
-    }
+        readonly property var labels: ["Latest bump", "Most replies", "Most images", "Oldest"]
+        text: labels[Math.max(0, modes.indexOf(root.controller.sortMode))]
+        iconName: "sort"
+        onClicked: sortMenu.popup(sortChip, 0, sortChip.height + 4)
 
-    Row {
-        spacing: 2
-        Repeater {
-            model: [
-                { mode: "grid", icon: "grid" },
-                { mode: "compact", icon: "rows" },
-                { mode: "list", icon: "list" },
-            ]
-            delegate: Rectangle {
-                width: 32; height: 32; radius: Theme.radiusSm
-                readonly property bool current: SettingsManager.catalogViewMode === modelData.mode
-                color: current ? Theme.surface3 : (modeHover.hovered ? Theme.surface2 : "transparent")
-
-                Behavior on color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
-
-                AppIcon {
-                    anchors.centerIn: parent
-                    name: modelData.icon
-                    iconSize: 16
-                    color: parent.current ? Theme.accent : Theme.ink
-                    Behavior on color { ColorAnimation { duration: 120 } }
+        AppMenu {
+            id: sortMenu
+            Repeater {
+                model: sortChip.modes.length
+                delegate: AppMenuItem {
+                    text: sortChip.labels[index]
+                    iconName: root.controller.sortMode === sortChip.modes[index] ? "check" : ""
+                    onTriggered: root.controller.sortMode = sortChip.modes[index]
                 }
-                HoverHandler { id: modeHover }
-                MouseArea { anchors.fill: parent; onClicked: SettingsManager.catalogViewMode = modelData.mode }
             }
         }
     }
 
+    SegmentedButtons {
+        compact: false
+        model: [
+            { value: "grid", icon: "grid" },
+            { value: "compact", icon: "rows" },
+            { value: "list", icon: "list" },
+        ]
+        current: SettingsManager.catalogViewMode
+        onActivated: (v) => SettingsManager.catalogViewMode = v
+    }
+
     AppButton {
-        flat: true
+        variant: "icon"
         iconName: "refresh"
+        tooltip: "Refresh"
         onClicked: root.controller.reload()
     }
 }

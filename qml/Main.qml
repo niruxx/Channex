@@ -18,7 +18,7 @@ ApplicationWindow {
     visible: true
     title: "Channex"
     flags: Qt.Window | Qt.FramelessWindowHint
-    color: Theme.canvas
+    color: Theme.surfaceContainer
 
     // Whole-window fade in/out. Window.opacity is a real native
     // compositor-level fade (SetLayeredWindowAttributes on Windows),
@@ -69,7 +69,7 @@ ApplicationWindow {
         radius: 14
         color: "transparent"
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.outlineVariant
         visible: mainWindow.visibility !== Window.Maximized
         z: 2000
     }
@@ -77,7 +77,7 @@ ApplicationWindow {
     Loader {
         anchors.fill: parent
         active: !SettingsManager.hydrated
-        sourceComponent: Rectangle { color: Theme.canvas }
+        sourceComponent: Rectangle { color: Theme.surfaceContainer }
     }
 
     Item {
@@ -106,56 +106,68 @@ ApplicationWindow {
                 width: parent.width
                 height: parent.height - titleBar.height
 
-                Sidebar { height: parent.height }
+                Sidebar { id: sidebar; height: parent.height }
 
-                Item {
-                    width: parent.width - 240
-                    height: parent.height
+                // M3 content pane: the raised `surface` sheet every view
+                // renders into, inset from the window's surfaceContainer
+                // background on the right/bottom edges.
+                Rectangle {
+                    width: parent.width - sidebar.width - 12
+                    height: parent.height - 12
+                    radius: Theme.shapeExtraLarge
+                    // Lets an opted-in animated background show through.
+                    color: SettingsManager.backgroundTheme === "none" ? Theme.surface : Theme.withAlpha(Theme.surface, 0.82)
+                    clip: true
 
                     CatalogView {
-                        anchors.fill: parent
+                        width: parent.width
+                        height: parent.height
                         readonly property bool active: NavigationController.view === "catalog"
                         opacity: active ? 1 : 0
-                        scale: active ? 1 : 0.985
+                        y: active ? 0 : 12
                         visible: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: Theme.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeStandard } }
+                        Behavior on y { NumberAnimation { duration: Theme.durLong; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeEmphasizedDecel } }
                     }
                     ThreadView {
-                        anchors.fill: parent
+                        width: parent.width
+                        height: parent.height
                         readonly property bool active: NavigationController.view === "thread"
                         opacity: active ? 1 : 0
-                        scale: active ? 1 : 0.985
+                        y: active ? 0 : 12
                         visible: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: Theme.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeStandard } }
+                        Behavior on y { NumberAnimation { duration: Theme.durLong; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeEmphasizedDecel } }
                     }
                     BookmarksView {
-                        anchors.fill: parent
+                        width: parent.width
+                        height: parent.height
                         readonly property bool active: NavigationController.view === "bookmarks"
                         opacity: active ? 1 : 0
-                        scale: active ? 1 : 0.985
+                        y: active ? 0 : 12
                         visible: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: Theme.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeStandard } }
+                        Behavior on y { NumberAnimation { duration: Theme.durLong; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeEmphasizedDecel } }
                     }
                     DownloadsView {
-                        anchors.fill: parent
+                        width: parent.width
+                        height: parent.height
                         readonly property bool active: NavigationController.view === "downloads"
                         opacity: active ? 1 : 0
-                        scale: active ? 1 : 0.985
+                        y: active ? 0 : 12
                         visible: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: Theme.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeStandard } }
+                        Behavior on y { NumberAnimation { duration: Theme.durLong; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeEmphasizedDecel } }
                     }
                     SettingsView {
-                        anchors.fill: parent
+                        width: parent.width
+                        height: parent.height
                         readonly property bool active: NavigationController.view === "settings"
                         opacity: active ? 1 : 0
-                        scale: active ? 1 : 0.985
+                        y: active ? 0 : 12
                         visible: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: Theme.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeStandard } }
+                        Behavior on y { NumberAnimation { duration: Theme.durLong; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeEmphasizedDecel } }
                     }
                 }
             }

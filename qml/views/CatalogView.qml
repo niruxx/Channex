@@ -31,11 +31,13 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        Rectangle {
+        CatalogToolbar {
             Layout.fillWidth: true
-            height: 52
-            color: "transparent"
-            CatalogToolbar { anchors.fill: parent; anchors.margins: 8; controller: controller }
+            Layout.leftMargin: 20
+            Layout.rightMargin: 16
+            Layout.topMargin: 16
+            Layout.bottomMargin: 8
+            controller: controller
         }
 
         Item {
@@ -45,26 +47,60 @@ Item {
             EmptyState {
                 anchors.centerIn: parent
                 visible: !NavigationController.boardCode
+                iconName: "grid"
                 text: "Pick a board to get started"
+                supportingText: "Choose a site and a board from the navigation drawer."
             }
 
-            BusyIndicator {
+            AppBusyIndicator {
                 anchors.centerIn: parent
-                running: controller.loading
-                visible: controller.loading && controller.count === 0
+                running: controller.loading && controller.count === 0
             }
 
-            Text {
+            EmptyState {
                 anchors.centerIn: parent
                 visible: !controller.loading && controller.errorString.length > 0
-                text: "Couldn't load this board: " + controller.errorString
-                color: Theme.danger
+                isError: true
+                iconName: "alert"
+                text: "Couldn't load this board"
+                supportingText: controller.errorString
+            }
+
+            // Thin M3 linear indicator while refreshing over existing content.
+            Rectangle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                height: 4
+                radius: 2
+                color: Theme.secondaryContainer
+                visible: controller.loading && controller.count > 0
+                clip: true
+                Rectangle {
+                    id: sweepBar
+                    height: parent.height
+                    radius: 2
+                    width: parent.width * 0.35
+                    color: Theme.primary
+                    NumberAnimation on x {
+                        running: sweepBar.parent.visible
+                        loops: Animation.Infinite
+                        from: -sweepBar.width
+                        to: sweepBar.parent.width
+                        duration: 1100
+                        easing.type: Easing.InOutCubic
+                    }
+                }
             }
 
             GridView {
                 id: gridView
                 anchors.fill: parent
-                anchors.margins: 12
+                anchors.leftMargin: 16
+                anchors.rightMargin: 8
+                anchors.topMargin: 8
                 // visible is intentionally NOT gated on controller.loading:
                 // that used to hard-cut the view invisible for the whole
                 // reload (board switch or a mode-switch that raced a
@@ -82,11 +118,16 @@ Item {
                 Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                 Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                 model: controller
-                cellWidth: SettingsManager.catalogViewMode === "compact" ? 160 : 232
+                // Cells stretch to fill the row exactly (no ragged right
+                // gutter): pick a column count from the target card
+                // width, then divide the available width evenly.
+                readonly property int targetCell: SettingsManager.catalogViewMode === "compact" ? 168 : 236
+                readonly property int columns: Math.max(1, Math.floor(width / targetCell))
+                cellWidth: Math.floor(width / columns)
                 // Tall enough for a full-width-square thumbnail plus subject
                 // + (grid only) a 3-line excerpt + the reply/image counts
                 // row without clipping into the row below - see ThreadCard.
-                cellHeight: SettingsManager.catalogViewMode === "compact" ? 210 : 340
+                cellHeight: SettingsManager.catalogViewMode === "compact" ? cellWidth + 64 : cellWidth + 128
                 clip: true
 
                 populate: Transition {
@@ -101,9 +142,12 @@ Item {
                     NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutCubic }
                 }
 
+                bottomMargin: 16
+                ScrollBar.vertical: AppScrollBar {}
+
                 delegate: Item {
-                    width: gridView.cellWidth - 8
-                    height: gridView.cellHeight - 8
+                    width: gridView.cellWidth - 12
+                    height: gridView.cellHeight - 12
                     ThreadCard {
                         anchors.fill: parent
                         post: model.post
@@ -117,7 +161,10 @@ Item {
             ListView {
                 id: listView
                 anchors.fill: parent
-                anchors.margins: 12
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
+                anchors.topMargin: 8
+                bottomMargin: 16
                 spacing: 8
                 clip: true
                 readonly property bool modeActive: SettingsManager.catalogViewMode === "list"
@@ -140,7 +187,7 @@ Item {
 
                 delegate: Item {
                     width: listView.width
-                    height: 88
+                    height: 96
 
                     // ThreadListRow has a `required property`; using it
                     // directly as the delegate root is unreliable with Qt

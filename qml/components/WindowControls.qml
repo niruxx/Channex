@@ -44,13 +44,11 @@ Row {
         }
     }
 
-    // Modern, non-blocky treatment: round hover pills with gaps between
-    // them, instead of the old flush rectangular hit-boxes that read as
-    // one solid square bar.
+    // M3 standard icon buttons; close turns error-colored on hover.
     Component {
         id: winControls
         Row {
-            spacing: 6
+            spacing: 4
             Repeater {
                 model: [
                     { icon: "minus", action: "minimize", danger: false },
@@ -58,17 +56,22 @@ Row {
                     { icon: "x", action: "close", danger: true },
                 ]
                 delegate: Rectangle {
-                    width: 32; height: 32; radius: 16
-                    color: hover.hovered ? (modelData.danger ? Theme.danger : Theme.surface3) : "transparent"
-                    scale: mouse.pressed ? 0.88 : 1.0
-                    Behavior on color { ColorAnimation { duration: 100 } }
-                    Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+                    width: 40; height: 40; radius: 20
+                    color: hover.hovered && modelData.danger ? Theme.error : "transparent"
+                    Behavior on color { ColorAnimation { duration: Theme.durShort } }
+
+                    StateLayer {
+                        visible: !modelData.danger
+                        layerColor: Theme.onSurfaceVariantColor
+                        hovered: hover.hovered
+                        pressed: mouse.pressed
+                    }
 
                     AppIcon {
                         anchors.centerIn: parent
                         name: modelData.icon
-                        iconSize: 11
-                        color: hover.hovered && modelData.danger ? "white" : Theme.ink
+                        iconSize: modelData.action === "close" ? 16 : 13
+                        color: hover.hovered && modelData.danger ? Theme.onErrorColor : Theme.onSurfaceVariantColor
                     }
                     HoverHandler { id: hover }
                     MouseArea {

@@ -4,7 +4,6 @@
 #include <QIcon>
 #include <QFont>
 #include <QFontDatabase>
-#include <QFontInfo>
 #include <QQuickWindow>
 
 #include "settings/SettingsManager.h"
@@ -12,6 +11,7 @@
 #include "lightbox/LightboxController.h"
 #include "lightbox/LightboxImageProvider.h"
 #include "posting/LynxchanPoster.h"
+#include "network/NetworkClient.h"
 
 #if defined(Q_OS_WIN)
 #include <windows.h>
@@ -36,31 +36,44 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     app.setWindowIcon(QIcon(QStringLiteral(":/qt/qml/Channex/resources/icons/app.svg")));
 
-    // Google Sans itself is Google's proprietary font and can't be
-    // bundled/redistributed here; "Segoe UI Variable" is Windows 11's
-    // own modern system UI face (falls back to "Segoe UI" pre-Win11)
-    // and reads similarly clean/geometric. Neither exists outside
-    // Windows, so forcing the family there would just hand Linux/macOS
-    // whatever last-resort font substitution their fontconfig/CoreText
-    // happens to pick - instead leave the platform's own default UI
-    // font (Cantarell/Noto Sans, SF Pro, ...) alone and only bump size.
-#if defined(Q_OS_WIN)
-    {
-        QFont uiFont(QStringLiteral("Segoe UI Variable Display"));
-        if (!QFontInfo(uiFont).exactMatch())
-            uiFont.setFamily(QStringLiteral("Segoe UI"));
-        uiFont.setPointSize(10);
-        QGuiApplication::setFont(uiFont);
-    }
-#else
+    // Material Design 3's type scale is built on Google's own faces.
+    // They can't be bundled here (Google Sans is proprietary), but if
+    // the user has one installed it's used, then Roboto (M3's open
+    // baseline face), then the platform's own UI font - Segoe UI
+    // Variable on Windows 11, or whatever the system default is.
+    // setFamilies() makes that an ordered fallback list rather than a
+    // single family that silently degrades to an arbitrary substitute.
     {
         QFont uiFont = QGuiApplication::font();
+        QStringList families = {
+            QStringLiteral("Google Sans Flex"),
+            QStringLiteral("Google Sans Text"),
+            QStringLiteral("Google Sans"),
+            QStringLiteral("Roboto Flex"),
+            QStringLiteral("Roboto"),
+        };
+#if defined(Q_OS_WIN)
+        families << QStringLiteral("Segoe UI Variable Text") << QStringLiteral("Segoe UI");
+#endif
+        families << uiFont.family();
+        QStringList available;
+        const QStringList installed = QFontDatabase::families();
+        for (const QString &f : families)
+            if (installed.contains(f) && !available.contains(f))
+                available << f;
+        uiFont.setFamilies(available.isEmpty() ? families : available);
         uiFont.setPointSize(10);
         QGuiApplication::setFont(uiFont);
     }
-#endif
 
+    // Thumbnails/favicons are fetched by QML Image elements through the
+    // engine's own network managers; give them the same HTTP/1.1 +
+    // timeout policy as NetworkClient (see NetworkClient.h). Declared
+    // before the engine so it outlives it.
+    QmlNetworkFactory qmlNetworkFactory;
     QQmlApplicationEngine engine;
+
+    engine.setNetworkAccessManagerFactory(&qmlNetworkFactory);
 
     // Image providers must exist before any QML tries to load
     // image://lightbox/... or image://captcha/... URLs.

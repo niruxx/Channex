@@ -3,3 +3,7 @@ build-*/
 CMakeUserPresets.json
 *.user
 *.user.*
+packaging/arch/src/
+packaging/arch/pkg/
+packaging/arch/*.pkg.tar.*
+packaging/arch/makepkg.log

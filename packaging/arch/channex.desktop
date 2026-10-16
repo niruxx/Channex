@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Channex
+GenericName=Imageboard Viewer
+Comment=Native viewer for chan-style imageboards
+Exec=channex_qt
+Icon=channex
+Terminal=false
+Categories=Network;Qt;
+StartupWMClass=channex_qt

@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Network Multimedia)
+find_package(Qt6 6.7 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Network Multimedia)
 
 # QML_FILES below span qml/, qml/components/, and qml/views/ - opt in to
 # per-directory qmldir generation so each is importable, silencing the
@@ -89,6 +89,20 @@ qt_add_qml_module(channex_qt
         qml/components/AppComboBox.qml
         qml/components/AppCheckBox.qml
         qml/components/AppIcon.qml
+        qml/components/StateLayer.qml
+        qml/components/AppBusyIndicator.qml
+        qml/components/SegmentedButtons.qml
+        qml/components/AppSwitch.qml
+        qml/components/AppChip.qml
+        qml/components/AppMenu.qml
+        qml/components/AppMenuItem.qml
+        qml/components/AppDialog.qml
+        qml/components/NavItem.qml
+        qml/components/RoundedImage.qml
+        qml/components/PostStats.qml
+        qml/components/SettingsSection.qml
+        qml/components/SettingsRow.qml
+        qml/components/AppScrollBar.qml
         qml/views/CatalogView.qml
         qml/views/ThreadView.qml
         qml/views/PostCard.qml
@@ -122,6 +136,19 @@ qt_add_qml_module(channex_qt
         resources/icons/ui/volume.svg
         resources/icons/ui/volume-mute.svg
         resources/icons/ui/check.svg
+        resources/icons/ui/chevron-down.svg
+        resources/icons/ui/chat.svg
+        resources/icons/ui/image.svg
+        resources/icons/ui/pin.svg
+        resources/icons/ui/lock.svg
+        resources/icons/ui/open-external.svg
+        resources/icons/ui/sort.svg
+        resources/icons/ui/send.svg
+        resources/icons/ui/trash.svg
+        resources/icons/ui/alert.svg
+        resources/icons/ui/shield.svg
+        resources/icons/ui/palette.svg
+        resources/icons/ui/globe.svg
 )
 
 set_target_properties(channex_qt PROPERTIES

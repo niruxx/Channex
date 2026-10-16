@@ -1,27 +1,35 @@
 import QtQuick
 import Channex
 
-// A minimal, crisp drop-shadow for genuinely floating/elevated
-// surfaces only - dialogs, popups, context menus - not structural
-// chrome that's always on screen (Sidebar/TitleBar are flat, no
-// shadow, by design). One low-opacity, downward-offset rectangle
-// stands in for a real gaussian blur: Qt's MultiEffect proved
-// unreliable for colorization on this Qt/RHI setup earlier this
-// session, and a proper blur carries the same risk, so this favors
-// "flat and correct" over "soft and might render broken."
+// M3 elevation shadow for floating surfaces (menus, dialogs, FAB-like
+// buttons, hovered cards). A real gaussian blur via MultiEffect proved
+// unreliable on this Qt/RHI setup, so the soft edge is approximated by
+// a few stacked, progressively larger, very low-alpha rounded rects -
+// a "key" shadow offset downward plus a faint ambient spread.
 //
-// Usage: drop as the first child of the surface (so it paints
-// behind), anchored/fill-parented to it, with `radius` matching the
-// surface's own radius.
+// Usage: first child of the surface (paints behind it via z: -1),
+// with `radius` matching the surface's radius. `level` follows M3's
+// elevation levels 0-5.
 Item {
     id: root
-    property int radius: Theme.radiusLg
+    property int radius: Theme.shapeLarge
+    property int level: 2
+    anchors.fill: parent
     z: -1
+    visible: level > 0
 
-    Rectangle {
-        anchors.fill: parent
-        anchors.topMargin: 4
-        radius: root.radius
-        color: Theme.withAlpha(Theme.shadowColor, 0.18)
+    readonly property real strength: Theme.dark ? 0.32 : 0.11
+
+    Repeater {
+        model: Math.min(root.level, 5) + 1
+        delegate: Rectangle {
+            readonly property int spread: index
+            x: -spread
+            y: -spread + Math.ceil(root.level * 0.75)
+            width: root.width + spread * 2
+            height: root.height + spread * 2
+            radius: root.radius + spread
+            color: Theme.withAlpha(Theme.shadow, root.strength / (index + 1.5))
+        }
     }
 }

@@ -16,10 +16,13 @@ Rectangle {
     property string threadWebUrl: ""
     signal posted()
 
-    radius: Theme.radiusMd
-    color: Theme.surface2
-    border.color: Theme.border
-    implicitHeight: layout.implicitHeight + 24
+    // M3 outlined card holding filled text fields and a filled
+    // primary action.
+    radius: Theme.shapeLarge
+    color: Theme.surface
+    border.width: 1
+    border.color: Theme.outlineVariant
+    implicitHeight: layout.implicitHeight + 40
 
     readonly property bool isLynxchan: site.postEngine === "lynxchan"
 
@@ -55,40 +58,63 @@ Rectangle {
     ColumnLayout {
         id: layout
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: 20
+        spacing: 12
 
-        Text { text: "Reply"; color: Theme.ink; font.bold: true; font.pixelSize: 13 }
+        RowLayout {
+            spacing: 10
+            Rectangle {
+                implicitWidth: 32; implicitHeight: 32; radius: 16
+                color: Theme.secondaryContainer
+                AppIcon { anchors.centerIn: parent; name: "chat"; iconSize: 16; color: Theme.onSecondaryContainerColor }
+            }
+            Text { text: "Reply to thread"; color: Theme.onSurfaceColor; font.pixelSize: Theme.titleMedium; font.weight: Font.Medium }
+        }
 
         ColumnLayout {
             opacity: root.isLynxchan ? 1 : 0
             visible: opacity > 0
             Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
-            spacing: 8
+            spacing: 12
 
-            AppTextField { id: nameField; Layout.fillWidth: true; placeholderText: "Name (optional)" }
+            AppTextField { id: nameField; Layout.fillWidth: true; label: "Name"; placeholderText: "Anonymous" }
             AppTextArea {
                 id: messageField
                 Layout.fillWidth: true
-                Layout.preferredHeight: 90
-                placeholderText: "Write a reply…"
+                Layout.preferredHeight: 120
+                label: "Comment"
             }
             RowLayout {
-                Image {
-                    source: root.captchaImage
-                    width: 140; height: 40
-                    fillMode: Image.PreserveAspectFit
+                spacing: 12
+                Rectangle {
+                    Layout.preferredWidth: 168
+                    Layout.preferredHeight: 56
+                    radius: Theme.shapeSmall
+                    color: Theme.surfaceContainerHighest
+                    Image {
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        source: root.captchaImage
+                        fillMode: Image.PreserveAspectFit
+                    }
                 }
-                AppButton { text: "⟳"; flat: true; onClicked: root.refreshCaptcha() }
-                AppTextField { id: captchaField; Layout.fillWidth: true; placeholderText: "Captcha answer" }
+                AppButton { variant: "icon"; iconName: "refresh"; tooltip: "New captcha"; onClicked: root.refreshCaptcha() }
+                AppTextField { id: captchaField; Layout.fillWidth: true; label: "Captcha answer" }
             }
             RowLayout {
-                Item { Layout.fillWidth: true }
-                Text { text: root.statusMessage; color: Theme.inkFaint; font.pixelSize: 11 }
+                spacing: 12
+                Text {
+                    Layout.fillWidth: true
+                    text: root.statusMessage
+                    color: root.statusMessage.indexOf("Failed") === 0 || root.statusMessage.indexOf("Captcha error") === 0 ? Theme.error : Theme.onSurfaceVariantColor
+                    font.pixelSize: Theme.bodySmall
+                    elide: Text.ElideRight
+                }
                 AppButton {
                     text: root.busy ? "Posting…" : "Post reply"
-                    checked: true
+                    variant: "filled"
+                    iconName: "send"
                     enabled: !root.busy && messageField.text.length > 0
                     onClicked: {
                         root.busy = true
@@ -105,32 +131,34 @@ Rectangle {
             visible: opacity > 0
             Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
-            spacing: 8
+            spacing: 12
 
             Text {
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
-                color: Theme.inkDim
-                font.pixelSize: 12
-                text: "This site requires solving a verification challenge on its own page. Write your reply below, then Continue on site - it'll be copied to your clipboard to paste in, and the thread here won't auto-refresh, so hit ⟳ above when you're done."
+                color: Theme.onSurfaceVariantColor
+                font.pixelSize: Theme.bodyMedium
+                text: "This site requires solving a verification challenge on its own page. Write your reply below, then Continue on site - it'll be copied to your clipboard to paste in, and the thread here won't auto-refresh, so hit refresh above when you're done."
             }
             AppTextArea {
                 id: extMessageField
                 Layout.fillWidth: true
-                Layout.preferredHeight: 70
-                placeholderText: "Write a reply to copy…"
+                Layout.preferredHeight: 110
+                label: "Comment (copied to clipboard)"
             }
             RowLayout {
+                spacing: 8
                 AppButton {
                     text: "Sign in with 4chan Pass"
                     visible: root.site.id === "4chan"
-                    flat: true
+                    variant: "text"
                     onClicked: ExternalReply.openAuthPage("https://sys.4chan.org/auth")
                 }
                 Item { Layout.fillWidth: true }
                 AppButton {
                     text: "Continue on site"
-                    checked: true
+                    variant: "filled"
+                    iconName: "open-external"
                     onClicked: ExternalReply.openForReply(root.threadWebUrl, extMessageField.text)
                 }
             }

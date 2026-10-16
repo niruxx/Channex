@@ -13,7 +13,7 @@ import Channex
 Item {
     id: root
     property string name: "grid"
-    property color color: Theme.ink
+    property color color: Theme.onSurfaceColor
     property real iconSize: 16
 
     implicitWidth: iconSize
@@ -26,6 +26,9 @@ Item {
         sourceSize.height: root.iconSize * 2
         fillMode: Image.PreserveAspectFit
         smooth: true
+        // coloredSource() bakes only the RGB into the SVG; carry the
+        // color's alpha (e.g. M3's 38%-opacity disabled content) here.
+        opacity: root.color.a
         asynchronous: false
     }
 

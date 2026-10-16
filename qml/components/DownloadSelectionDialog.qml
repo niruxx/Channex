@@ -6,17 +6,15 @@ import Channex
 // Opened from ThreadView's "Download" button instead of immediately
 // queuing every file: a grid of square, tap-to-toggle tiles (all
 // selected by default) so the user can exclude specific files before
-// the job is queued.
-Dialog {
+// the job is queued. M3 full-height dialog with dividers around the
+// scrolling grid.
+AppDialog {
     id: root
-    modal: true
-    parent: Overlay.overlay
-    x: Math.round((parent.width - width) / 2)
-    y: Math.round((parent.height - height) / 2)
     width: Math.min(640, parent ? parent.width - 80 : 640)
     height: Math.min(640, parent ? parent.height - 80 : 640)
     title: "Download files"
     padding: 0
+    topPadding: 0
 
     property var files: []
     property string jobLabel: ""
@@ -49,52 +47,32 @@ Dialog {
         root.selectedMap = sel
     }
 
-    enter: Transition {
-        NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
-        NumberAnimation { properties: "scale"; from: 0.92; to: 1; duration: 160; easing.type: Easing.OutCubic }
-    }
-    exit: Transition {
-        NumberAnimation { properties: "opacity"; from: 1; to: 0; duration: 120; easing.type: Easing.InCubic }
-        NumberAnimation { properties: "scale"; from: 1; to: 0.92; duration: 120; easing.type: Easing.InCubic }
-    }
-
-    Overlay.modal: Rectangle {
-        color: "#00000099"
-        Behavior on opacity { NumberAnimation { duration: 160 } }
-    }
-
-    background: Rectangle {
-        color: Theme.surface
-        radius: Theme.radiusLg
-        border.color: Theme.border
-        CardShadow { anchors.fill: parent; radius: Theme.radiusLg }
-    }
-
     header: ColumnLayout {
-        Layout.fillWidth: true
-        spacing: 10
+        spacing: 16
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.margins: 20
-            Layout.bottomMargin: 0
-            Label { text: root.title; color: Theme.ink; font.bold: true; font.pixelSize: 16; Layout.fillWidth: true }
-            AppButton { text: "Select all"; flat: true; onClicked: root.setAll(true) }
-            AppButton { text: "Select none"; flat: true; onClicked: root.setAll(false) }
+            Layout.leftMargin: 24
+            Layout.rightMargin: 16
+            Layout.topMargin: 24
+            spacing: 4
+            Text { text: root.title; color: Theme.onSurfaceColor; font.pixelSize: Theme.headlineSmall; Layout.fillWidth: true }
+            AppButton { variant: "text"; text: "All"; onClicked: root.setAll(true) }
+            AppButton { variant: "text"; text: "None"; onClicked: root.setAll(false) }
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderSoft }
+        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.outlineVariant }
     }
 
     contentItem: GridView {
         id: grid
         clip: true
-        cellWidth: 128
-        cellHeight: 128
+        cellWidth: Math.floor((width - 32) / Math.max(1, Math.floor((width - 32) / 132)))
+        cellHeight: cellWidth
         leftMargin: 16
         rightMargin: 16
-        topMargin: 16
-        bottomMargin: 16
+        topMargin: 12
+        bottomMargin: 12
         model: root.files
 
         populate: Transition {
@@ -109,67 +87,72 @@ Dialog {
             readonly property bool selected: root.selectedMap[modelData.url] === true
 
             Rectangle {
+                id: tile
                 anchors.fill: parent
-                anchors.margins: 6
-                radius: Theme.radiusMd
-                color: Theme.surface3
-                clip: true
-                border.width: selected ? 3 : 1
-                border.color: selected ? Theme.accent : Theme.borderSoft
+                anchors.margins: 4
+                radius: Theme.shapeMedium
+                color: selected ? Theme.secondaryContainer : Theme.surfaceContainerHigh
+                Behavior on color { ColorAnimation { duration: Theme.durShort } }
 
-                Behavior on border.color { ColorAnimation { duration: 120 } }
-
-                Image {
+                // Selected tiles inset the thumbnail (the M3 "selected
+                // item shrinks into a tonal frame" pattern).
+                RoundedImage {
                     anchors.fill: parent
-                    anchors.margins: parent.border.width
+                    anchors.margins: selected ? 8 : 0
+                    radius: selected ? Theme.shapeSmall : Theme.shapeMedium
+                    maskColor: tile.color
                     source: modelData.thumbUrl || ""
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    opacity: selected ? 1.0 : 0.45
+                    opacity: selected ? 1.0 : 0.55
+                    Behavior on anchors.margins { NumberAnimation { duration: Theme.durShort; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeStandard } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.durShort } }
 
-                    Behavior on opacity { NumberAnimation { duration: 120 } }
-                }
+                    AppIcon {
+                        visible: modelData.isVideo === true
+                        anchors.centerIn: parent
+                        name: "play"
+                        iconSize: 22
+                        color: "white"
+                    }
 
-                AppIcon {
-                    visible: modelData.isVideo === true
-                    anchors.centerIn: parent
-                    name: "play"
-                    iconSize: 18
-                    color: "white"
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left
+                        anchors.margins: 6
+                        height: 18
+                        width: sizeText.implicitWidth + 10
+                        radius: 9
+                        visible: modelData.size > 0
+                        color: Qt.rgba(0, 0, 0, 0.6)
+                        Text {
+                            id: sizeText
+                            anchors.centerIn: parent
+                            text: modelData.size ? Math.round(modelData.size / 1024) + " KB" : ""
+                            color: "white"
+                            font.pixelSize: Theme.labelSmall
+                        }
+                    }
                 }
 
                 Rectangle {
                     anchors.top: parent.top
                     anchors.right: parent.right
-                    anchors.margins: 6
-                    width: 22; height: 22; radius: 11
-                    color: selected ? Theme.accent : "#00000099"
-                    border.width: selected ? 0 : 1
-                    border.color: "#ffffff88"
+                    anchors.margins: 4
+                    width: 24; height: 24; radius: 12
+                    color: selected ? Theme.primary : Qt.rgba(0, 0, 0, 0.45)
+                    border.width: selected ? 0 : 2
+                    border.color: "#ffffffcc"
 
                     AppIcon {
                         visible: selected
                         anchors.centerIn: parent
                         name: "check"
-                        iconSize: 12
-                        color: "#0c0e11"
+                        iconSize: 14
+                        color: Theme.onPrimaryColor
                     }
                 }
 
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 18
-                    visible: modelData.size > 0
-                    color: "#00000099"
-                    Text {
-                        anchors.centerIn: parent
-                        text: modelData.size ? Math.round(modelData.size / 1024) + " KB" : ""
-                        color: "white"
-                        font.pixelSize: 9
-                    }
-                }
+                HoverHandler { id: tileHover }
+                StateLayer { hovered: tileHover.hovered; layerColor: Theme.onSurfaceColor }
 
                 MouseArea {
                     anchors.fill: parent
@@ -181,25 +164,26 @@ Dialog {
     }
 
     footer: ColumnLayout {
-        Layout.fillWidth: true
         spacing: 0
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderSoft }
+        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.outlineVariant }
 
         RowLayout {
             Layout.fillWidth: true
             Layout.margins: 16
+            Layout.leftMargin: 24
+            spacing: 8
             Text {
                 Layout.fillWidth: true
                 text: root.selectedCount + " of " + root.files.length + " selected"
-                color: Theme.inkFaint
-                font.pixelSize: 12
+                color: Theme.onSurfaceVariantColor
+                font.pixelSize: Theme.bodyMedium
             }
-            AppButton { text: "Cancel"; flat: true; onClicked: root.close() }
+            AppButton { variant: "text"; text: "Cancel"; onClicked: root.close() }
             AppButton {
-                text: "Download selected"
+                variant: "filled"
+                text: "Download " + root.selectedCount
                 iconName: "download"
-                checked: true
                 enabled: root.selectedCount > 0
                 onClicked: {
                     var toDownload = []
