@@ -217,6 +217,21 @@ Flickable {
                 supportingText: SettingsManager.downloadDir.length ? SettingsManager.downloadDir : "No folder chosen"
                 trailing: AppButton { variant: "tonal"; text: "Choose"; iconName: "folder"; onClicked: folderDialog.open() }
             }
+
+            SettingsRow {
+                title: "Thread folder names"
+                supportingText: SettingsManager.downloadFolderNaming === "name"
+                    ? "Named after the thread's subject (or its opening post)"
+                    : "Named site-board-threadId, e.g. 4chan-g-105076684"
+                trailing: SegmentedButtons {
+                    model: [
+                        { value: "id", label: "Thread ID" },
+                        { value: "name", label: "Thread name" },
+                    ]
+                    current: SettingsManager.downloadFolderNaming
+                    onActivated: (v) => SettingsManager.downloadFolderNaming = v
+                }
+            }
         }
 
         // ---- Custom sites ----

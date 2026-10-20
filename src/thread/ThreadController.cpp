@@ -67,6 +67,12 @@ QString ThreadController::subject() const
     return m_posts.first().toMap().value("subject").toString();
 }
 
+QString ThreadController::opCommentHtml() const
+{
+    if (m_posts.isEmpty()) return {};
+    return m_posts.first().toMap().value("commentHtml").toString();
+}
+
 QVariantList ThreadController::allFiles() const
 {
     QVariantList files;

@@ -94,6 +94,13 @@ int main(int argc, char *argv[])
         &app, []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
+#if !defined(Q_OS_WIN)
+    // Main.qml paints its own rounded background on a transparent
+    // window outside Windows; that needs an alpha channel in the window
+    // surface, which has to be requested before the window is created.
+    QQuickWindow::setDefaultAlphaBuffer(true);
+#endif
+
     engine.loadFromModule("Channex", "Main");
 
     // Removing the native frame (Qt::FramelessWindowHint, set on

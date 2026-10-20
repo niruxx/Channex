@@ -36,6 +36,7 @@ Item {
     // the filmstrip below can match it.
     Rectangle {
         anchors.fill: parent
+        radius: Theme.windowRadius
         color: "#0a0a0a"
         opacity: 0.97
         MouseArea {

@@ -32,6 +32,22 @@ Item {
             controller.load(NavigationController.siteId, NavigationController.boardCode, NavigationController.threadId)
     }
 
+    // Download folder for this thread, per Settings > Downloads > Folder
+    // names: "site-board-threadId", or the thread's name - its subject,
+    // else the start of the OP's text - made filesystem-safe. Falls back
+    // to the ID form when the thread has no usable text.
+    function downloadFolderName() {
+        var idName = NavigationController.siteId + "-" + NavigationController.boardCode + "-" + NavigationController.threadId
+        if (SettingsManager.downloadFolderNaming !== "name") return idName
+        var name = controller.subject.length ? Theme.plainText(controller.subject) : Theme.plainText(controller.opCommentHtml)
+        name = name.replace(/[\\/:*?"<>|\u0000-\u001f]/g, " ")
+                   .replace(/\s+/g, " ")
+                   .trim()
+        if (name.length > 80) name = name.substring(0, 80).trim()
+        name = name.replace(/[. ]+$/, "")   // Windows rejects trailing dots/spaces
+        return name.length ? name : idName
+    }
+
     readonly property bool bookmarked: BookmarksController.bookmarks.length >= 0
         && BookmarksController.isBookmarked(NavigationController.siteId, NavigationController.boardCode, NavigationController.threadId)
 
@@ -74,8 +90,8 @@ Item {
                 enabled: controller.allFiles.length > 0
                 onClicked: {
                     var destBase = SettingsManager.downloadDir.length ? SettingsManager.downloadDir : "."
-                    var jobLabel = NavigationController.siteId + "-" + NavigationController.boardCode + "-" + NavigationController.threadId
-                    downloadDialog.openWithFiles(controller.allFiles, jobLabel, destBase + "/" + jobLabel)
+                    var folder = root.downloadFolderName()
+                    downloadDialog.openWithFiles(controller.allFiles, folder, destBase + "/" + folder)
                 }
             }
 

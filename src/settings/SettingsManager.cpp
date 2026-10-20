@@ -55,6 +55,7 @@ void SettingsManager::hydrate()
         m_backgroundTheme = obj.value("backgroundTheme").toString("none");
         m_catalogViewMode = obj.value("catalogViewMode").toString("grid");
         m_replyDisplayStyle = obj.value("replyDisplayStyle").toString("standard");
+        m_downloadFolderNaming = obj.value("downloadFolderNaming").toString("id");
         m_muteWebmsByDefault = obj.value("muteWebmsByDefault").toBool(true);
         m_birthdayHats = obj.value("birthdayHats").toBool(true);
         m_hasCompletedOnboarding = obj.value("hasCompletedOnboarding").toBool(false);
@@ -76,6 +77,7 @@ void SettingsManager::hydrate()
     emit backgroundThemeChanged();
     emit catalogViewModeChanged();
     emit replyDisplayStyleChanged();
+    emit downloadFolderNamingChanged();
     emit muteWebmsByDefaultChanged();
     emit birthdayHatsChanged();
     emit hasCompletedOnboardingChanged();
@@ -103,6 +105,7 @@ void SettingsManager::save() const
     obj["backgroundTheme"] = m_backgroundTheme;
     obj["catalogViewMode"] = m_catalogViewMode;
     obj["replyDisplayStyle"] = m_replyDisplayStyle;
+    obj["downloadFolderNaming"] = m_downloadFolderNaming;
     obj["muteWebmsByDefault"] = m_muteWebmsByDefault;
     obj["birthdayHats"] = m_birthdayHats;
     obj["hasCompletedOnboarding"] = m_hasCompletedOnboarding;
@@ -185,6 +188,14 @@ void SettingsManager::setReplyDisplayStyle(const QString &v)
     if (m_replyDisplayStyle == v) return;
     m_replyDisplayStyle = v;
     emit replyDisplayStyleChanged();
+    save();
+}
+
+void SettingsManager::setDownloadFolderNaming(const QString &v)
+{
+    if (m_downloadFolderNaming == v) return;
+    m_downloadFolderNaming = v;
+    emit downloadFolderNamingChanged();
     save();
 }
 

@@ -73,7 +73,7 @@ Item {
                 selected: NavigationController.view === modelData.view
                 badge: modelData.view === "bookmarks" && BookmarksController.bookmarks.length > 0
                        ? String(BookmarksController.bookmarks.length)
-                       : (modelData.view === "downloads" && DownloadManager.jobs.length > 0 ? String(DownloadManager.jobs.length) : "")
+                       : (modelData.view === "downloads" && DownloadManager.activeJobCount > 0 ? String(DownloadManager.activeJobCount) : "")
                 onClicked: {
                     if (modelData.view === "bookmarks") NavigationController.goBookmarks()
                     else if (modelData.view === "downloads") NavigationController.goDownloads()

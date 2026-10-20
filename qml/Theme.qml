@@ -194,6 +194,12 @@ QtObject {
     readonly property int shapeExtraLarge: 28
     readonly property int shapeFull: 9999
 
+    // Corner radius of the frameless main window - 14 normally, 0 when
+    // maximized/fullscreen. Set by Main.qml; full-window overlays
+    // (onboarding, lightbox) follow it so they don't square off the
+    // window's rounded corners.
+    property int windowRadius: 14
+
     readonly property int radiusSm: shapeSmall
     readonly property int radiusMd: shapeMedium
     readonly property int radiusLg: shapeLarge

@@ -18,7 +18,15 @@ ApplicationWindow {
     visible: true
     title: "Channex"
     flags: Qt.Window | Qt.FramelessWindowHint
-    color: Theme.surfaceContainer
+    // Transparent outside Windows, with the rounded background drawn
+    // below: a frameless window is otherwise an opaque rectangle, and
+    // its square corners showed past the rounded outline (reading as
+    // cut-off corners on KDE). Windows instead clips the window itself
+    // to a rounded region in main.cpp (SetWindowRgn).
+    color: Qt.platform.os === "windows" ? Theme.surfaceContainer : "transparent"
+
+    readonly property bool roundedCorners: visibility !== Window.Maximized && visibility !== Window.FullScreen
+    Binding { target: Theme; property: "windowRadius"; value: mainWindow.roundedCorners ? 14 : 0 }
 
     // Whole-window fade in/out. Window.opacity is a real native
     // compositor-level fade (SetLayeredWindowAttributes on Windows),
@@ -55,8 +63,18 @@ ApplicationWindow {
         fadeAnim.restart()
     }
 
+    Rectangle {
+        anchors.fill: parent
+        radius: Theme.windowRadius
+        color: Theme.surfaceContainer
+    }
+
+    // Inset by 30% of the corner radius - the smallest margin that keeps
+    // a square layer fully inside the rounded window shape - so the
+    // animated themes can't paint into the transparent corners.
     AnimatedBackground {
         anchors.fill: parent
+        anchors.margins: Math.ceil(Theme.windowRadius * 0.3)
     }
 
     // Follows the actual window shape: main.cpp clips the frameless
@@ -66,18 +84,18 @@ ApplicationWindow {
     // square that would get cut off at the true (rounded) corners.
     Rectangle {
         anchors.fill: parent
-        radius: 14
+        radius: Theme.windowRadius
         color: "transparent"
         border.width: 1
         border.color: Theme.outlineVariant
-        visible: mainWindow.visibility !== Window.Maximized
+        visible: mainWindow.roundedCorners
         z: 2000
     }
 
     Loader {
         anchors.fill: parent
         active: !SettingsManager.hydrated
-        sourceComponent: Rectangle { color: Theme.surfaceContainer }
+        sourceComponent: Rectangle { radius: Theme.windowRadius; color: Theme.surfaceContainer }
     }
 
     Item {
@@ -86,7 +104,7 @@ ApplicationWindow {
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
-        AnimatedBackground { anchors.fill: parent }
+        AnimatedBackground { anchors.fill: parent; anchors.margins: Math.ceil(Theme.windowRadius * 0.3) }
         OnboardingWizard { anchors.fill: parent }
     }
 

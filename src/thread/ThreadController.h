@@ -22,6 +22,7 @@ class ThreadController : public QAbstractListModel
     Q_PROPERTY(bool loading READ loading NOTIFY loadingChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorChanged)
     Q_PROPERTY(QString subject READ subject NOTIFY dataReset)
+    Q_PROPERTY(QString opCommentHtml READ opCommentHtml NOTIFY dataReset)
     Q_PROPERTY(int postCount READ postCount NOTIFY dataReset)
     Q_PROPERTY(QString threadWebUrl READ threadWebUrl NOTIFY dataReset)
     Q_PROPERTY(QVariantList allFiles READ allFiles NOTIFY dataReset)
@@ -58,6 +59,7 @@ public:
     bool loading() const { return m_loading; }
     QString errorString() const { return m_error; }
     QString subject() const;
+    QString opCommentHtml() const;
     int postCount() const { return m_posts.size(); }
     QString threadWebUrl() const { return m_threadWebUrl; }
     QVariantList allFiles() const;

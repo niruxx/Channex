@@ -12,6 +12,7 @@ import "../components"
 Rectangle {
     id: root
     color: Theme.surfaceContainer
+    radius: Theme.windowRadius
 
     readonly property var steps: [
         { id: "welcome", icon: "grid", title: "Welcome to Channex", body: "Browse and switch imageboards, bookmark threads, reply, and download - all from one native window." },
