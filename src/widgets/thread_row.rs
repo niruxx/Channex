@@ -21,6 +21,7 @@ mod imp {
         pub sticky: OnceCell<gtk::Image>,
         pub excerpt: OnceCell<gtk::Label>,
         pub stats: OnceCell<gtk::Label>,
+        pub hat: OnceCell<gtk::Picture>,
         pub post: RefCell<Option<PostRef>>,
     }
 
@@ -102,6 +103,8 @@ impl ThreadRow {
             .build();
         let overlay = gtk::Overlay::builder().child(&frame).build();
         overlay.add_overlay(&placeholder);
+        let hat = crate::birthday::hat(30);
+        overlay.add_overlay(&hat);
         self.append(&overlay);
 
         let text = gtk::Box::builder()
@@ -147,6 +150,7 @@ impl ThreadRow {
         let _ = imp.sticky.set(sticky);
         let _ = imp.excerpt.set(excerpt);
         let _ = imp.stats.set(stats);
+        let _ = imp.hat.set(hat);
     }
 
     pub fn bind(&self, post: &PostRef, options: CardOptions) {
@@ -154,6 +158,10 @@ impl ThreadRow {
         imp.post.replace(Some(post.clone()));
         imp.subject.get().unwrap().set_label(&post.title());
         imp.sticky.get().unwrap().set_visible(post.sticky);
+        imp.hat
+            .get()
+            .unwrap()
+            .set_visible(!post.files.is_empty() && crate::birthday::hats_today());
         imp.excerpt
             .get()
             .unwrap()

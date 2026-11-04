@@ -15,3 +15,6 @@ packaging/arch/makepkg.log
 packaging/flatpak/cargo-sources.json
 packaging/flatpak/build-dir/
 *.flatpak
+
+# Built packages (packaging/*/build-*.sh)
+/dist/

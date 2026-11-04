@@ -178,6 +178,12 @@ fn general_page(window: &ChannexWindow, dialog: &adw::PreferencesDialog) -> adw:
         |d| d.settings.mute_webms_by_default,
         |d, v| d.settings.mute_webms_by_default = v,
     ));
+    content.add(&setting_switch(
+        "Birthday Hats",
+        "Party hats on post images every October 1st, 4chan's birthday",
+        |d| d.settings.birthday_hats,
+        |d, v| d.settings.birthday_hats = v,
+    ));
     page.add(&content);
 
     // ---- Downloads ----

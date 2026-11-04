@@ -5,6 +5,7 @@
     <file preprocess="xml-stripblanks">ui/window.ui</file>
     <file preprocess="xml-stripblanks">ui/shortcuts.ui</file>
     <file>style.css</file>
+    <file>party-hat.svg</file>
     <!-- libadwaita adds <prefix>/icons to the icon theme search path,
          so the app icon resolves in-app (About dialog) even before the
          app is installed. -->

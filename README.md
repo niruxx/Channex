@@ -40,7 +40,8 @@ Linux is the main platform. Windows support is planned (see
   the site, whose captcha only works there.
 - **Appearance:** follows the system's light/dark style and accent color,
   or set your own; five classic imageboard skins (Yotsuba, Yotsuba B,
-  Futaba, Photon, Burichan).
+  Futaba, Photon, Burichan). Party hats on post images every October 1st,
+  4chan's birthday (can be turned off).
 - **Keyboard:** Ctrl+F search, F5 refresh, Ctrl+D bookmark, F9 sidebar,
   Alt+Left back, Ctrl+, preferences, Ctrl+? for the full list.
 - A welcome tour on first launch. Settings and bookmarks from the earlier
@@ -54,15 +55,32 @@ Linux is the main platform. Windows support is planned (see
 
 ## Installing
 
-**Arch Linux**, from a clone of this repository:
+Each [GitHub release](https://github.com/niruxx/Channex/releases) has
+packages for Arch, Debian/Ubuntu, Fedora, an AppImage and a Flatpak
+bundle. Channex needs GTK 4.18+ and libadwaita 1.8+: Arch, Fedora 43+,
+Ubuntu 25.10+, Debian testing/unstable (not Debian 13), or any distro via
+the Flatpak.
 
-```sh
-cd packaging/arch
-makepkg -si
-```
+| Distro | Install |
+|---|---|
+| Arch | `sudo pacman -U channex-0.2.0-1-x86_64.pkg.tar.zst` |
+| Debian / Ubuntu | `sudo apt install ./channex_0.2.0-1_amd64.deb` |
+| Fedora | `sudo dnf install ./channex-0.2.0-1.fc43.x86_64.rpm` |
+| AppImage | `chmod +x Channex-0.2.0-x86_64.AppImage && ./Channex-0.2.0-x86_64.AppImage` |
 
-Release builds (an Arch package and a Flatpak bundle) are attached to
-each [GitHub release](https://github.com/niruxx/Channex/releases).
+For video playback, install your distro's GStreamer "good" and libav
+plugins.
+
+### Building the packages yourself
+
+| Package | Command | Needs |
+|---|---|---|
+| Arch | `cd packaging/arch && makepkg -si` | base-devel |
+| Debian | `packaging/debian/build-deb.sh` | only `ar` and `tar` |
+| Fedora | `packaging/fedora/build-rpm.sh` | rpm-build, on Fedora 43+ |
+| AppImage | `packaging/appimage/build-appimage.sh` | downloads linuxdeploy |
+
+All write to `dist/` (Arch to `packaging/arch/`).
 
 ## Building
 
@@ -124,7 +142,8 @@ dbus-run-session -- sh -c '
 `preferences:sites`, `add-site`, or `<what>:<site>:<board>:<thread>` where
 `<what>` is `thread`, `reply`, `download-dialog`, or `download-test`
 (downloads the thread's first six files), or
-`media:<site>:<board>:<thread>:<file index>[:zoom]`. Point `XDG_DATA_HOME` at a
+`media:<site>:<board>:<thread>:<file index>[:zoom]`.
+`CHANNEX_DEV_BIRTHDAY=1` shows the October 1st birthday hats today. Point `XDG_DATA_HOME` at a
 scratch folder to use test settings.
 
 ## Architecture
@@ -155,12 +174,13 @@ own. The **binary** is the GTK app on top of it.
 | `src/state.rs` | App-wide state (store, HTTP client, board lists) with change signals |
 | `src/downloads.rs` | Download manager |
 | `src/theme.rs` | Light/dark, accent color, classic skins |
+| `src/birthday.rs` | Birthday hats on October 1st |
 | `src/viewer/` | Media viewer: carousel, zoomable images, video |
 | `src/thumbnails.rs` | Image loading with memory and disk caches |
 | `src/runtime.rs` | Background runtime for network work |
 | `src/devtools.rs` | Debug-only helpers (headless screenshots) |
 | `data/` | Blueprint UI files, stylesheet, icon, desktop entry, metainfo |
-| `packaging/` | Arch PKGBUILD and Flatpak manifest |
+| `packaging/` | Arch, Debian, Fedora, AppImage and Flatpak packaging |
 
 ## History
 

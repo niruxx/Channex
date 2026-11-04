@@ -515,12 +515,27 @@ impl PostWidget {
             ReplyStyle::Standard => 160,
             ReplyStyle::Modern => 190,
         };
-        for file in &post.files {
-            files.append(&self.file_tile(post, file, size, ctx.style != ReplyStyle::Compact));
+        let hats = crate::birthday::hats_today();
+        for (i, file) in post.files.iter().enumerate() {
+            let tile = self.file_tile(
+                post,
+                file,
+                size,
+                ctx.style != ReplyStyle::Compact,
+                hats && i == 0,
+            );
+            files.append(&tile);
         }
     }
 
-    fn file_tile(&self, post: &PostRef, file: &PostFile, size: i32, caption: bool) -> gtk::Widget {
+    fn file_tile(
+        &self,
+        post: &PostRef,
+        file: &PostFile,
+        size: i32,
+        caption: bool,
+        hat: bool,
+    ) -> gtk::Widget {
         let picture = gtk::Picture::builder()
             .content_fit(gtk::ContentFit::Cover)
             .can_shrink(true)
@@ -545,6 +560,9 @@ impl PostWidget {
             .build();
         frame.append(&square);
         let overlay = gtk::Overlay::builder().child(&frame).build();
+        if hat {
+            overlay.add_overlay(&crate::birthday::hat(size / 4 + 8));
+        }
         if file.is_video {
             overlay.add_overlay(
                 &gtk::Image::builder()

@@ -27,6 +27,8 @@ mod imp {
         pub subject: OnceCell<gtk::Label>,
         pub excerpt: OnceCell<gtk::Label>,
         pub stats: OnceCell<gtk::Label>,
+        pub hat: OnceCell<gtk::Picture>,
+        pub badges: OnceCell<gtk::Box>,
         pub post: RefCell<Option<PostRef>>,
         pub on_bookmark: RefCell<Option<BookmarkCallback>>,
     }
@@ -115,6 +117,10 @@ impl ThreadCard {
         badges.append(&sticky);
         badges.append(&closed);
         overlay.add_overlay(&badges);
+        let hat = crate::birthday::hat(44);
+        hat.set_margin_start(4);
+        hat.set_margin_top(4);
+        overlay.add_overlay(&hat);
 
         let spoiler = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
@@ -206,6 +212,8 @@ impl ThreadCard {
         let _ = imp.subject.set(subject);
         let _ = imp.excerpt.set(excerpt);
         let _ = imp.stats.set(stats);
+        let _ = imp.hat.set(hat);
+        let _ = imp.badges.set(badges);
     }
 
     /// Called when the bookmark button is clicked, with the shown post.
@@ -233,6 +241,12 @@ impl ThreadCard {
         imp.stats.get().unwrap().set_label(&stats_text(post));
         imp.sticky.get().unwrap().set_visible(post.sticky);
         imp.closed.get().unwrap().set_visible(post.closed);
+        let hat = !post.files.is_empty() && crate::birthday::hats_today();
+        imp.hat.get().unwrap().set_visible(hat);
+        imp.badges
+            .get()
+            .unwrap()
+            .set_margin_start(if hat { 50 } else { 12 });
 
         let bookmark = imp.bookmark.get().unwrap();
         bookmark.set_icon_name(if options.bookmarked {

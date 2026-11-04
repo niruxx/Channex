@@ -257,6 +257,23 @@ See [Media viewer](#media-viewer-was-phase-6-) under Future features.
   `<project_license>`), screenshots in the metainfo, and a submission PR
   to flathub/flathub.
 
+## Phase 9b — More Linux packages ✅ (partly verified)
+
+- [x] Debian/Ubuntu `.deb` (`packaging/debian/build-deb.sh`): built with
+      only `ar` and `tar`, so it works anywhere. Declares GTK 4.18+ and
+      libadwaita 1.8+ so it won't install where it can't run. Built and
+      inspected here; not test-installed (no Debian system available).
+- [x] Fedora `.rpm` (`packaging/fedora/channex.spec` + `build-rpm.sh`),
+      built from source. *Not built here (no rpmbuild).*
+- [x] AppImage (`packaging/appimage/build-appimage.sh`, linuxdeploy +
+      its GTK plugin). *Not built here (downloading the tools wasn't
+      allowed).* Video uses the host's GStreamer plugins.
+- [x] `release.yml` builds all three natively (Debian testing and
+      Fedora 43 containers) alongside Arch and Flatpak. *Untested until
+      the next tag push.*
+- Not supported: Debian 13 "trixie" and Ubuntu before 25.10 (libadwaita
+  too old). The binary itself needs glibc 2.38+.
+
 ## Phase 11 — Release ✅
 
 The Qt code itself was removed in Phase 0.
@@ -316,12 +333,15 @@ Planned, but after the phases above.
 - Checked headlessly with a Lainchan image, a PDF and zoom, and a webm
   and a GIF from 4chan's work-safe /wsg/ board.
 
-### Birthday hats
+### Birthday hats ✅
 
-- [ ] Party hats on posts on October 1st (4chan's anniversary), as the
-      site does it - and the "Birthday hats" switch in Preferences →
-      Content to turn them off. The Qt version had the setting but never
-      drew the hats; the saved preference is already carried over.
+- [x] On October 1st (4chan's anniversary, local date), a party hat sits
+      on thread thumbnails in the catalog (grid and list) and on each
+      post's first image in threads, as the site does it.
+- [x] "Birthday Hats" switch in Preferences → Content (on by default; the
+      Qt version's saved preference carries over).
+- [x] An original party-hat drawing (`data/party-hat.svg`), bundled in
+      the app. Debug builds can force hats with `CHANNEX_DEV_BIRTHDAY=1`.
 
 ---
 
@@ -349,7 +369,7 @@ with the phase that brings it over.
 | Download picker dialog + 4-way concurrent download manager | 7 |
 | Thread folder naming (ID or name) | 7 |
 | Mute videos by default | Future ✅ |
-| Birthday hats | Future |
+| Birthday hats | Future ✅ |
 | LynxChan in-app posting with captcha | 8 |
 | External reply handoff + 4chan Pass sign-in | 8 |
 | Report post (4chan) | 4 |
@@ -395,3 +415,4 @@ with the phase that brings it over.
    rustls to its `ring` backend would remove all three issues.
 3. **License:** the repo has none, which Flathub (and anyone wanting to
    contribute) needs. Which license should Channex use?
+4. Multimedia playback is failing with url resolve errors and gifs being picked up as mp4's, this will be fixed in a 0.2.0 hotfix 3

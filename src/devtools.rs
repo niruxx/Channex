@@ -10,6 +10,9 @@
 //! `<what>:<site>:<board>:<thread>` with `thread`, `reply`,
 //! `download-dialog`, or `download-test` (downloads six files), or
 //! `media:<site>:<board>:<thread>:<file index>[:zoom]`.
+//!
+//! `CHANNEX_DEV_BIRTHDAY=1` shows birthday hats as if it were October 1st
+//! (see `birthday.rs`).
 
 use gtk::prelude::*;
 use gtk::{glib, graphene};

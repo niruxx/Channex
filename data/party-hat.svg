@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Party hat for posts on October 1st (4chan's birthday). Tilted
+       to perch on a thumbnail's top-left corner. -->
+  <defs>
+    <clipPath id="cone">
+      <polygon points="32,8 13,55 51,55"/>
+    </clipPath>
+  </defs>
+  <g transform="rotate(-22 32 40)">
+    <!-- Cone -->
+    <polygon points="32,8 13,55 51,55" fill="#e8467c"/>
+    <!-- Stripes -->
+    <g clip-path="url(#cone)" stroke-width="6" stroke-linecap="round">
+      <line x1="4" y1="30" x2="60" y2="14" stroke="#ffd23f"/>
+      <line x1="4" y1="46" x2="60" y2="30" stroke="#3ec7c2"/>
+      <line x1="4" y1="62" x2="60" y2="46" stroke="#ffd23f"/>
+    </g>
+    <!-- Brim -->
+    <ellipse cx="32" cy="55" rx="19.5" ry="4" fill="#b8285c"/>
+    <!-- Outline for contrast on any thumbnail -->
+    <polygon points="32,8 13,55 51,55" fill="none" stroke="#5a1730" stroke-width="1.5" stroke-linejoin="round"/>
+    <!-- Pom-pom -->
+    <circle cx="32" cy="8" r="6.5" fill="#fff4c2" stroke="#5a1730" stroke-width="1.5"/>
+    <circle cx="30" cy="6" r="2" fill="#ffffff"/>
+  </g>
+</svg>
