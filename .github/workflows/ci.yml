@@ -11,7 +11,9 @@ jobs:
     container: archlinux:latest
     steps:
       - name: Install dependencies
-        run: pacman -Syu --noconfirm --needed git rust gtk4 libadwaita blueprint-compiler desktop-file-utils appstream
+        # base-devel brings gcc and pkg-config, which the GTK bindings'
+        # build scripts and the linker need; cmake builds the TLS library.
+        run: pacman -Syu --noconfirm --needed base-devel cmake git rust gtk4 libadwaita blueprint-compiler desktop-file-utils appstream
       - uses: actions/checkout@v4
       - name: Format
         run: cargo fmt --check
