@@ -257,7 +257,7 @@ See [Media viewer](#media-viewer-was-phase-6-) under Future features.
   `<project_license>`), screenshots in the metainfo, and a submission PR
   to flathub/flathub.
 
-## Phase 11 — Release ✅ (except the tag)
+## Phase 11 — Release ✅
 
 The Qt code itself was removed in Phase 0.
 
@@ -271,8 +271,8 @@ The Qt code itself was removed in Phase 0.
 - [x] AppStream metainfo: description, four screenshots, 0.2.0 release
       notes, and the correct GitHub links (they pointed at the wrong
       account).
-- [ ] Commit, then tag `v0.2.0` (the release workflow builds and attaches
-      the packages).
+- [x] Committed and tagged `v0.2.0` (the release workflow builds and
+      attaches the packages).
 
 ## Phase 10 — Windows (last)
 
