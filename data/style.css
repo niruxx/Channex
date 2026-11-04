@@ -273,3 +273,10 @@ listview.thread > row {
 .media-viewer statuspage {
   color: white;
 }
+
+/* Why a video is held up (rate limiting, slow site). */
+.media-viewer .viewer-note {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+}

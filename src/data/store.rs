@@ -65,6 +65,12 @@ pub struct Settings {
     pub custom_sites: Vec<Site>,
     /// Site id → board codes hidden from the sidebar.
     pub hidden_boards: HashMap<String, Vec<String>>,
+    /// How often the image cache is cleared.
+    pub cache_clear_interval: super::cache::ClearInterval,
+    /// Image cache size limit in MB (0 = no limit).
+    pub cache_size_limit_mb: u32,
+    /// When the image cache was last cleared (Unix seconds; 0 = never).
+    pub cache_last_cleared: i64,
 }
 
 impl Default for Settings {
@@ -83,6 +89,9 @@ impl Default for Settings {
             has_completed_onboarding: false,
             custom_sites: Vec::new(),
             hidden_boards: HashMap::new(),
+            cache_clear_interval: super::cache::ClearInterval::default(),
+            cache_size_limit_mb: 500,
+            cache_last_cleared: 0,
         }
     }
 }

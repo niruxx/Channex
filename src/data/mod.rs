@@ -8,9 +8,11 @@
 //! - [`catalog`]: catalog search and sort
 //! - [`store`]: settings + bookmarks on disk (with Qt-era import)
 //! - [`downloads`]: file and folder naming for downloads
+//! - [`cache`]: when to clear the image cache
 //! - [`posting`]: replying to LynxChan threads
 
 pub mod adapters;
+pub mod cache;
 pub mod catalog;
 pub mod comment;
 pub mod downloads;

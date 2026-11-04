@@ -35,3 +35,10 @@ where
     let handle = runtime().spawn(future);
     async move { handle.await.expect("background task panicked") }
 }
+
+/// Runs `future` to completion on the background runtime, blocking the
+/// calling thread. For code called synchronously from other threads
+/// (GStreamer reading a media stream); never call it from a runtime task.
+pub fn block_on<F: Future>(future: F) -> F::Output {
+    runtime().block_on(future)
+}

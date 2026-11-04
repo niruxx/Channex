@@ -29,8 +29,9 @@ Linux is the main platform. Windows support is planned (see
   preview, and every post lists its replies. Three post styles. Right-click
   a post to reply, copy it, download its files, or (on 4chan) report it.
 - **Media viewer:** images, GIFs and videos full-window, with swipe or
-  arrow keys between files, click or pinch to zoom, and a filmstrip of
-  every file in the thread.
+  arrow keys between files, click or pinch to zoom, looping GIFs, and a
+  filmstrip of every file in the thread. When a site holds a video up
+  (for example by rate limiting), the viewer says why.
 - **Bookmarks** that count new replies since you last looked.
 - **Downloads:** pick which of a thread's files to save; four download at
   a time, into a folder per thread (named by number or subject), with
@@ -42,6 +43,8 @@ Linux is the main platform. Windows support is planned (see
   or set your own; five classic imageboard skins (Yotsuba, Yotsuba B,
   Futaba, Photon, Burichan). Party hats on post images every October 1st,
   4chan's birthday (can be turned off).
+- **Storage:** the image cache can be cleared by hand, on a schedule, or
+  kept under a size limit. Videos stream and are never stored.
 - **Keyboard:** Ctrl+F search, F5 refresh, Ctrl+D bookmark, F9 sidebar,
   Alt+Left back, Ctrl+, preferences, Ctrl+? for the full list.
 - A welcome tour on first launch. Settings and bookmarks from the earlier
@@ -139,10 +142,14 @@ dbus-run-session -- sh -c '
 
 `CHANNEX_SCREENSHOT_DELAY_MS` sets the wait (default 3000).
 `CHANNEX_DEV_PAGE` opens something first: `bookmarks`, `preferences`,
-`preferences:sites`, `add-site`, or `<what>:<site>:<board>:<thread>` where
+`preferences:sites`, `preferences:storage`, `add-site`, or `<what>:<site>:<board>:<thread>` where
 `<what>` is `thread`, `reply`, `download-dialog`, or `download-test`
 (downloads the thread's first six files), or
-`media:<site>:<board>:<thread>:<file index>[:zoom]`.
+`media:<site>:<board>:<thread>:<file index>[:zoom]`, or
+`media-stress:<site>:<board>:<thread>:<file index>` (switches and closes
+videos mid-stream). `CHANNEX_DEV_WATCHDOG=1` logs any UI freeze over
+250 ms. `CHANNEX_DEV_FAKE_429=1` makes video streams act as if the site
+were rate-limiting them.
 `CHANNEX_DEV_BIRTHDAY=1` shows the October 1st birthday hats today. Point `XDG_DATA_HOME` at a
 scratch folder to use test settings.
 
@@ -162,6 +169,7 @@ own. The **binary** is the GTK app on top of it.
 | `catalog.rs` | Catalog search and sort |
 | `store.rs` | Settings and bookmarks file (imports the Qt version's data) |
 | `downloads.rs` | Safe, unique file and folder names |
+| `cache.rs` | When to clear the image cache, and what to evict |
 | `posting.rs` | LynxChan captcha and reply API |
 
 | App | What |
@@ -175,8 +183,9 @@ own. The **binary** is the GTK app on top of it.
 | `src/downloads.rs` | Download manager |
 | `src/theme.rs` | Light/dark, accent color, classic skins |
 | `src/birthday.rs` | Birthday hats on October 1st |
-| `src/viewer/` | Media viewer: carousel, zoomable images, video |
+| `src/viewer/` | Media viewer: carousel, zoomable images, video streamed over HTTP ranges |
 | `src/thumbnails.rs` | Image loading with memory and disk caches |
+| `src/cache.rs` | Image cache clearing: on demand, scheduled, size limit |
 | `src/runtime.rs` | Background runtime for network work |
 | `src/devtools.rs` | Debug-only helpers (headless screenshots) |
 | `data/` | Blueprint UI files, stylesheet, icon, desktop entry, metainfo |

@@ -286,6 +286,13 @@ async fn download_to(client: &HttpClient, url: &str, path: &Path) -> Result<(), 
         .acquire_owned()
         .await
         .map_err(|e| e.to_string())?;
+    stream_to_file(client, url, path).await
+}
+
+/// Streams `url` to `path` via `<path>.part`, so a failed or interrupted
+/// download never leaves a truncated file under the real name. Shared
+/// with the media viewer's cache (which doesn't queue behind downloads).
+pub async fn stream_to_file(client: &HttpClient, url: &str, path: &Path) -> Result<(), String> {
     if let Some(dir) = path.parent() {
         tokio::fs::create_dir_all(dir)
             .await

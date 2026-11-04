@@ -291,6 +291,21 @@ The Qt code itself was removed in Phase 0.
 - [x] Committed and tagged `v0.2.0` (the release workflow builds and
       attaches the packages).
 
+## Storage settings ✅
+
+- [x] Preferences → Storage: the image cache's size with a **Clear**
+      button, **Clear Automatically** (Never / Every Day / Every Week /
+      Every Month; default weekly), and a **Size Limit** (No Limit,
+      100 MB – 2 GB; default 500 MB) that removes the least recently used
+      images first, down to 90% of the limit.
+- [x] Applied at startup and every 10 minutes (`src/cache.rs`; the rules
+      are tested in `src/data/cache.rs`). Replaces the old fixed
+      "delete images older than 7 days".
+- [x] Only thumbnails and site icons are stored; videos stream and are
+      never written to disk.
+- Checked: a 1 MB limit trimmed 637 cached images (8.3 MB) to 112
+  (800 KB); an overdue daily clear emptied the cache.
+
 ## Phase 10 — Windows (last)
 
 The last phase to be worked on: it comes after every other phase.
@@ -319,10 +334,40 @@ Planned, but after the phases above.
 - [x] Images: the thumbnail shows while the full file downloads. Click to
       zoom to actual size (2× for small images) centred on the click, and
       click again to fit; drag to pan; pinch or Ctrl+scroll to zoom.
-- [x] GIFs animate (as a silent looping stream).
-- [x] Video (webm/mp4) streams through GTK's GStreamer backend with
-      GTK's own controls (play/pause, seek, volume), honouring "Mute
-      videos by default".
+- [x] GIFs animate and loop forever. They're downloaded into memory and
+      drawn frame by frame from gdk-pixbuf's decoder
+      (`src/viewer/animation.rs`). The first version played them through
+      GStreamer, which can't seek in a GIF, so looping (a seek back to
+      the start) froze on the last frame.
+- [x] Video (webm/mp4) plays through GTK's GStreamer backend with GTK's
+      own controls (play/pause, seek, volume), honouring "Mute videos by
+      default". Media is streamed with HTTP Range requests through the
+      app's own client (`src/viewer/http_stream.rs`): playback starts
+      right away, seeking fetches just that part, and nothing is written
+      to disk. (The first version handed GTK the `https://` address
+      directly, which only works when a gvfs HTTP backend is running -
+      so on most desktops every video failed to open.)
+- [x] Fixed a hard freeze when switching or closing a video: GStreamer
+      asks for the file size while starting, before it can cancel
+      anything, and the stream answered from the network - so closing a
+      video waited on a request (indefinitely under rate limiting). The
+      size now comes from the site's API, every network wait honours
+      GStreamer's cancellation, and seeks never wait on reads. Checked
+      with a stress test (open, switch twice, back, close, reopen, close)
+      under a UI-stall watchdog, on Lainchan and on rate-limited 4chan.
+- [x] Gentler on rate limits: data already received (up to 8 MB per
+      video) is reused from memory instead of re-requested, new requests
+      start 64 KB early to cover small backward seeks, and a 429 waits as
+      long as the server's `Retry-After` asks (max 10 s, two retries).
+      When a site keeps rate-limiting, the viewer says so plainly.
+- [x] Says why a video is held up or stopped. While the stream waits to
+      retry, a note over the video says so ("The site is limiting how
+      fast files load. Trying again in 3 s…"), as it does after 15 s of
+      loading. Once retries are used up the stream stays failed: it makes
+      no more requests and the viewer shows the reason (rate limited, the
+      file is gone, the site's answer, connection lost, missing GStreamer
+      plugins). Before this, GStreamer quietly kept retrying elsewhere in
+      the file, so a rate-limited video spun forever.
 - [x] Filmstrip of every file in the thread; the current one is
       highlighted and kept in view.
 - [x] Save (into the thread's download folder, through the download

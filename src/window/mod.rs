@@ -212,7 +212,9 @@ impl ChannexWindow {
             })
             .build();
         let preferences = gio::ActionEntry::builder("preferences")
-            .activate(|win: &Self, _, _| crate::dialogs::show_preferences(win, None))
+            .activate(|win: &Self, _, _| {
+                crate::dialogs::show_preferences(win, None);
+            })
             .build();
         let add_site = gio::ActionEntry::builder("add-site")
             .activate(|win: &Self, _, _| crate::dialogs::show_add_site(win, None))

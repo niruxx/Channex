@@ -11,7 +11,7 @@ use crate::theme::{self, SKINS};
 use crate::window::ChannexWindow;
 
 /// Opens Preferences, optionally on a page (`"general"` or `"sites"`).
-pub fn show_preferences(window: &ChannexWindow, page: Option<&str>) {
+pub fn show_preferences(window: &ChannexWindow, page: Option<&str>) -> adw::PreferencesDialog {
     let dialog = adw::PreferencesDialog::builder()
         .search_enabled(true)
         .build();
@@ -21,6 +21,7 @@ pub fn show_preferences(window: &ChannexWindow, page: Option<&str>) {
         dialog.set_visible_page_name(page);
     }
     dialog.present(Some(window));
+    dialog
 }
 
 fn general_page(window: &ChannexWindow, dialog: &adw::PreferencesDialog) -> adw::PreferencesPage {
@@ -267,6 +268,9 @@ fn general_page(window: &ChannexWindow, dialog: &adw::PreferencesDialog) -> adw:
     downloads_group.add(&naming_row);
     page.add(&downloads_group);
 
+    // ---- Storage ----
+    page.add(&storage_group(dialog));
+
     // ---- Welcome tour ----
     let tour = adw::PreferencesGroup::new();
     let tour_row = adw::ButtonRow::builder().title("Show Welcome Tour").build();
@@ -412,4 +416,112 @@ fn sites_page(window: &ChannexWindow) -> adw::PreferencesPage {
     });
     page.add(&hidden);
     page
+}
+
+/// Preferences → Storage: the image cache's size, a Clear button, and
+/// when it's cleared automatically.
+fn storage_group(dialog: &adw::PreferencesDialog) -> adw::PreferencesGroup {
+    use channex::data::cache::{ClearInterval, SIZE_LIMITS_MB, format_size};
+
+    let group = adw::PreferencesGroup::builder()
+        .title("Storage")
+        .description("Thumbnails and site icons are kept on disk so they load faster. Videos are streamed and never stored.")
+        .build();
+
+    let usage = adw::ActionRow::builder()
+        .title("Image Cache")
+        .subtitle("Calculating…")
+        .build();
+    let clear = gtk::Button::builder()
+        .label("Clear")
+        .valign(gtk::Align::Center)
+        .build();
+    usage.add_suffix(&clear);
+    let refresh = glib::clone!(
+        #[weak]
+        usage,
+        move || {
+            glib::spawn_future_local(async move {
+                let bytes = crate::cache::usage().await;
+                usage.set_subtitle(&if bytes == 0 {
+                    "Empty".to_owned()
+                } else {
+                    format_size(bytes)
+                });
+            });
+        }
+    );
+    refresh();
+    let refresh_after_clear = refresh.clone();
+    clear.connect_clicked(glib::clone!(
+        #[weak]
+        dialog,
+        move |button| {
+            button.set_sensitive(false);
+            let refresh = refresh_after_clear.clone();
+            let button = button.clone();
+            glib::spawn_future_local(async move {
+                crate::cache::clear().await;
+                refresh();
+                button.set_sensitive(true);
+                dialog.add_toast(adw::Toast::new("Cache cleared"));
+            });
+        }
+    ));
+    group.add(&usage);
+
+    let interval_row = adw::ComboRow::builder()
+        .title("Clear Automatically")
+        .model(&gtk::StringList::new(
+            &ClearInterval::ALL.map(ClearInterval::label),
+        ))
+        .build();
+    keep_synced(&interval_row, |row| {
+        let interval = state().data().settings.cache_clear_interval;
+        let index = ClearInterval::ALL
+            .iter()
+            .position(|i| *i == interval)
+            .unwrap_or(2) as u32;
+        if row.selected() != index {
+            row.set_selected(index);
+        }
+    });
+    interval_row.connect_selected_notify(|row| {
+        let interval = ClearInterval::ALL[row.selected() as usize];
+        if state().data().settings.cache_clear_interval != interval {
+            state().update_settings(|d| d.settings.cache_clear_interval = interval);
+        }
+    });
+    group.add(&interval_row);
+
+    let labels = SIZE_LIMITS_MB.map(|mb| match mb {
+        0 => "No Limit".to_owned(),
+        mb if mb >= 1024 => format!("{} GB", mb / 1024),
+        mb => format!("{mb} MB"),
+    });
+    let label_refs: Vec<&str> = labels.iter().map(String::as_str).collect();
+    let limit_row = adw::ComboRow::builder()
+        .title("Size Limit")
+        .subtitle("The least recently used images are removed first")
+        .model(&gtk::StringList::new(&label_refs))
+        .build();
+    keep_synced(&limit_row, |row| {
+        let mb = state().data().settings.cache_size_limit_mb;
+        let index = SIZE_LIMITS_MB.iter().position(|m| *m == mb).unwrap_or(3) as u32;
+        if row.selected() != index {
+            row.set_selected(index);
+        }
+    });
+    limit_row.connect_selected_notify(move |row| {
+        let mb = SIZE_LIMITS_MB[row.selected() as usize];
+        if state().data().settings.cache_size_limit_mb != mb {
+            state().update_settings(|d| d.settings.cache_size_limit_mb = mb);
+            // Apply a lower limit right away.
+            crate::cache::maintain();
+            let refresh = refresh.clone();
+            glib::timeout_add_local_once(std::time::Duration::from_millis(500), refresh);
+        }
+    });
+    group.add(&limit_row);
+    group
 }

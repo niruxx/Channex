@@ -17,11 +17,42 @@
 use gtk::prelude::*;
 use gtk::{glib, graphene};
 
+/// `CHANNEX_DEV_WATCHDOG=1`: logs whenever the main loop is blocked for
+/// more than 250 ms (a frozen UI), with how long.
+pub fn start_watchdog() {
+    if std::env::var_os("CHANNEX_DEV_WATCHDOG").is_none() {
+        return;
+    }
+    let last = std::rc::Rc::new(std::cell::Cell::new(std::time::Instant::now()));
+    glib::timeout_add_local(std::time::Duration::from_millis(50), move || {
+        let now = std::time::Instant::now();
+        let gap = now.duration_since(last.replace(now));
+        if gap > std::time::Duration::from_millis(250) {
+            eprintln!("WATCHDOG: main loop blocked for {} ms", gap.as_millis());
+        }
+        glib::ControlFlow::Continue
+    });
+}
+
 pub fn schedule_screenshot(window: &crate::window::ChannexWindow) {
     match std::env::var("CHANNEX_DEV_PAGE").ok().as_deref() {
         Some("bookmarks") => window.open_bookmarks(),
-        Some("preferences") => crate::dialogs::show_preferences(window, None),
-        Some("preferences:sites") => crate::dialogs::show_preferences(window, Some("sites")),
+        Some("preferences") => {
+            crate::dialogs::show_preferences(window, None);
+        }
+        // The bottom of the General page (Downloads, Storage).
+        Some("preferences:storage") => {
+            let dialog = crate::dialogs::show_preferences(window, None);
+            glib::timeout_add_local_once(std::time::Duration::from_millis(1500), move || {
+                if let Some(scrolled) = find_scrolled(dialog.upcast_ref()) {
+                    let adj = scrolled.vadjustment();
+                    adj.set_value(adj.upper());
+                }
+            });
+        }
+        Some("preferences:sites") => {
+            crate::dialogs::show_preferences(window, Some("sites"));
+        }
         Some("add-site") => crate::dialogs::show_add_site(window, None),
         // Downloads the first 6 files of a thread, then shows Downloads.
         Some(page) if page.starts_with("download-test:") => {
@@ -53,6 +84,44 @@ pub fn schedule_screenshot(window: &crate::window::ChannexWindow) {
                     crate::downloads::downloads().start_job("Test download", dir, files);
                     window.open_downloads();
                 });
+            }
+        }
+        // media-stress:<site>:<board>:<thread>:<file index>: open a video,
+        // then switch files and close the viewer mid-stream.
+        Some(page) if page.starts_with("media-stress:") => {
+            let parts: Vec<String> = page.split(':').map(str::to_owned).collect();
+            if parts.len() >= 5 {
+                window.open_thread(&parts[1], &parts[2], &parts[3]);
+                let index: usize = parts[4].parse().unwrap_or(0);
+                let window = window.clone();
+                let steps: Vec<(u64, &'static str)> = vec![
+                    (3000, "open"),
+                    (5000, "next"),
+                    (6500, "next"),
+                    (8000, "prev"),
+                    (10000, "close"),
+                    (11000, "reopen"),
+                    (13000, "close"),
+                ];
+                for (at, step) in steps {
+                    let window = window.clone();
+                    glib::timeout_add_local_once(std::time::Duration::from_millis(at), move || {
+                        eprintln!("STEP {step}");
+                        match step {
+                            "open" | "reopen" => {
+                                if let Some(page) = window
+                                    .visible_page()
+                                    .and_downcast::<crate::pages::ThreadPage>()
+                                {
+                                    page.open_media_at(index);
+                                }
+                            }
+                            "next" => window.dev_media_viewer().dev_step(1),
+                            "prev" => window.dev_media_viewer().dev_step(-1),
+                            _ => window.dev_media_viewer().close(),
+                        }
+                    });
+                }
             }
         }
         // media:<site>:<board>:<thread>:<file index>[:zoom]
@@ -145,4 +214,19 @@ pub fn schedule_screenshot(window: &crate::window::ChannexWindow) {
         // window-state saving run, as they would for a user.
         window.close();
     });
+}
+
+/// The first scrolled window inside `widget`.
+fn find_scrolled(widget: &gtk::Widget) -> Option<gtk::ScrolledWindow> {
+    if let Some(scrolled) = widget.downcast_ref::<gtk::ScrolledWindow>() {
+        return Some(scrolled.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(c) = child {
+        if let Some(found) = find_scrolled(&c) {
+            return Some(found);
+        }
+        child = c.next_sibling();
+    }
+    None
 }

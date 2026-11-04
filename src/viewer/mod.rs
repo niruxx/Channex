@@ -4,9 +4,13 @@
 //! Left/Right keys to move); only the current file and its neighbours are
 //! loaded, so a thread with hundreds of files stays light. Images show
 //! their thumbnail while the full file downloads, then zoom and pan (see
-//! [`zoom`]); GIFs animate; videos stream with GTK's built-in controls.
+//! [`zoom`]); GIFs are decoded in memory and loop (see [`animation`]);
+//! videos stream over HTTP ranges with GTK's built-in controls, with a
+//! note on screen whenever the site holds them up.
 //! A filmstrip along the bottom jumps to any file. Esc closes.
 
+mod animation;
+mod http_stream;
 mod zoom;
 
 use std::cell::{Cell, OnceCell, RefCell};
@@ -15,15 +19,20 @@ use std::rc::Rc;
 
 use adw::prelude::*;
 use adw::subclass::prelude::*;
+use channex::data::http::FetchError;
 use channex::data::model::PostFile;
 use gtk::{gdk, gio, glib};
 
+use self::animation::AnimatedImage;
 use self::zoom::ZoomableImage;
 use crate::downloads::downloads;
 use crate::runtime;
 use crate::state::state;
 use crate::thumbnails;
 use crate::window::ChannexWindow;
+
+/// How long a video may sit loading before the viewer says so.
+const SLOW_LOAD: std::time::Duration = std::time::Duration::from_secs(15);
 
 /// Where the files come from, for saving them.
 #[derive(Debug, Clone)]
@@ -439,7 +448,7 @@ impl MediaViewer {
         if file.is_video {
             self.fill_video(slot, file, current);
         } else if ext == ".gif" {
-            self.fill_animation(slot, file, current);
+            self.fill_animation(slot, file);
         } else if matches!(
             ext.as_str(),
             ".jpg" | ".jpeg" | ".png" | ".webp" | ".bmp" | ".avif" | ".jxl"
@@ -458,6 +467,45 @@ impl MediaViewer {
 
     /// Thumbnail + spinner while the full image downloads.
     fn fill_image(&self, slot: &gtk::Box, file: &PostFile) {
+        self.fill_fetched(slot, file, |viewer, bytes| {
+            let texture = gdk::Texture::from_bytes(&glib::Bytes::from_owned(bytes))
+                .map_err(|_| "The image couldn't be decoded".to_owned())?;
+            let image = ZoomableImage::new(&texture);
+            image.connect_zoom_changed(glib::clone!(
+                #[weak]
+                viewer,
+                move |zoomed| {
+                    viewer.imp().zoomed.set(zoomed);
+                    viewer
+                        .imp()
+                        .carousel
+                        .get()
+                        .unwrap()
+                        .set_interactive(!zoomed);
+                }
+            ));
+            Ok(image.upcast())
+        });
+    }
+
+    /// GIFs download into memory (they're small) and loop forever; see
+    /// [`animation`] for why GTK's media player isn't used for them.
+    fn fill_animation(&self, slot: &gtk::Box, file: &PostFile) {
+        self.fill_fetched(slot, file, |_, bytes| {
+            let gif =
+                AnimatedImage::new(&bytes).map_err(|_| "The GIF couldn't be decoded".to_owned())?;
+            Ok(gif.upcast())
+        });
+    }
+
+    /// Shows the thumbnail and a spinner while the whole file downloads,
+    /// then `build`s the widget from its bytes.
+    fn fill_fetched(
+        &self,
+        slot: &gtk::Box,
+        file: &PostFile,
+        build: impl FnOnce(&Self, Vec<u8>) -> Result<gtk::Widget, String> + 'static,
+    ) {
         let preview = gtk::Picture::builder()
             .content_fit(gtk::ContentFit::Contain)
             .can_shrink(true)
@@ -499,88 +547,180 @@ impl MediaViewer {
             if slot.first_child().as_ref() != Some(loading.upcast_ref()) {
                 return;
             }
-            let texture = bytes.map_err(|e| e.to_string()).and_then(|b| {
-                gdk::Texture::from_bytes(&glib::Bytes::from_owned(b))
-                    .map_err(|_| "The image couldn't be decoded".to_owned())
-            });
+            let widget = bytes
+                .map_err(|e| fetch_error_text(&e))
+                .and_then(|b| build(&viewer, b));
             unload(&slot);
-            match texture {
-                Ok(texture) => {
-                    let image = ZoomableImage::new(&texture);
-                    image.connect_zoom_changed(glib::clone!(
-                        #[weak]
-                        viewer,
-                        move |zoomed| {
-                            viewer.imp().zoomed.set(zoomed);
-                            viewer
-                                .imp()
-                                .carousel
-                                .get()
-                                .unwrap()
-                                .set_interactive(!zoomed);
-                        }
-                    ));
-                    slot.append(&image);
+            match widget {
+                Ok(widget) => {
+                    slot.append(&widget);
+                    if viewer.is_current(&slot) {
+                        play(&slot);
+                    }
                 }
                 Err(message) => viewer.show_error(&slot, &file, &message, true),
             }
         });
     }
 
-    /// GIFs play as a looping, silent media stream with no controls.
-    fn fill_animation(&self, slot: &gtk::Box, file: &PostFile, current: bool) {
-        let media = gtk::MediaFile::for_file(&gio::File::for_uri(&file.url));
-        media.set_loop(true);
-        media.set_muted(true);
-        let picture = gtk::Picture::builder()
-            .paintable(&media)
-            .content_fit(gtk::ContentFit::Contain)
-            .can_shrink(true)
-            .hexpand(true)
-            .vexpand(true)
-            .build();
-        slot.append(&picture);
-        self.watch_errors(slot, &media, file);
-        if current {
-            media.play();
-        }
+    fn is_current(&self, slot: &gtk::Box) -> bool {
+        let imp = self.imp();
+        imp.slots.borrow().get(imp.index.get() as usize) == Some(slot)
     }
 
+    /// Videos stream (see [`http_stream`]) into GTK's player. Until the
+    /// first frame, the thumbnail shows with a spinner; whenever the site
+    /// holds the stream up - before or during playback - a note over the
+    /// video says why.
     fn fill_video(&self, slot: &gtk::Box, file: &PostFile, current: bool) {
-        let media = gtk::MediaFile::for_file(&gio::File::for_uri(&file.url));
+        let stream = http_stream::HttpStream::new(state().http(), &file.url, file.size);
+        let media = gtk::MediaFile::for_input_stream(&stream);
         media.set_loop(true);
         media.set_muted(state().data().settings.mute_webms_by_default);
-        let video = gtk::Video::builder()
+        let player = gtk::Video::builder()
             .media_stream(&media)
             .hexpand(true)
             .vexpand(true)
             .build();
-        slot.append(&video);
-        self.watch_errors(slot, &media, file);
-        if current {
-            media.play();
-        }
-    }
+        let loading = self.loading_placeholder(file);
+        let note = gtk::Label::builder()
+            .wrap(true)
+            .justify(gtk::Justification::Center)
+            .halign(gtk::Align::Center)
+            .valign(gtk::Align::Start)
+            .margin_top(12)
+            .margin_start(12)
+            .margin_end(12)
+            .visible(false)
+            .css_classes(["osd", "toolbar", "viewer-note"])
+            .build();
+        let overlay = gtk::Overlay::builder().child(&player).build();
+        overlay.add_overlay(&loading);
+        overlay.add_overlay(&note);
+        slot.append(&overlay);
 
-    fn watch_errors(&self, slot: &gtk::Box, media: &gtk::MediaFile, file: &PostFile) {
-        let file = file.clone();
+        media.connect_prepared_notify(glib::clone!(
+            #[weak]
+            loading,
+            move |media| {
+                if media.is_prepared() {
+                    loading.set_visible(false);
+                }
+            }
+        ));
+        // Why it stopped: our stream's own reason if it gave up (GStreamer
+        // reports that as some vaguer error of its own), else GStreamer's.
+        let stream_for_errors = stream.clone();
+        let file_for_errors = file.clone();
         media.connect_error_notify(glib::clone!(
             #[weak(rename_to = viewer)]
             self,
             #[weak]
             slot,
+            #[weak]
+            overlay,
+            #[weak]
+            loading,
             move |media| {
                 if let Some(err) = media.error() {
-                    unload(&slot);
-                    viewer.show_error(
-                        &slot,
-                        &file,
-                        &format!("It couldn't be played: {}", err.message()),
-                        true,
-                    );
+                    if cfg!(debug_assertions) {
+                        eprintln!("VIEWER: player error: {}", err.message());
+                    }
+                    let reason = stream_for_errors
+                        .failure()
+                        .unwrap_or_else(|| err.message().to_owned());
+                    let text = playback_error_text(&reason, !loading.is_visible());
+                    viewer.fail_media(&slot, &overlay, &file_for_errors, &text);
                 }
             }
         ));
+        // The stream's status lives on GStreamer's thread; poll it.
+        let started = std::time::Instant::now();
+        let file_for_failure = file.clone();
+        glib::timeout_add_local(
+            std::time::Duration::from_millis(250),
+            glib::clone!(
+                #[weak(rename_to = viewer)]
+                self,
+                #[weak]
+                slot,
+                #[weak]
+                overlay,
+                #[weak]
+                note,
+                #[weak]
+                loading,
+                #[weak]
+                media,
+                #[upgrade_or]
+                glib::ControlFlow::Break,
+                move || {
+                    if media.error().is_some() {
+                        return glib::ControlFlow::Break;
+                    }
+                    // GStreamer doesn't always report a failed read as an
+                    // error (it may keep trying), so stop here.
+                    if let Some(reason) = stream.failure() {
+                        let text = playback_error_text(&reason, !loading.is_visible());
+                        viewer.fail_media(&slot, &overlay, &file_for_failure, &text);
+                        return glib::ControlFlow::Break;
+                    }
+                    let text = stream.status().or_else(|| {
+                        (loading.is_visible() && started.elapsed() >= SLOW_LOAD).then(|| {
+                            "This is taking a while. The site may be slow or limiting how fast files load."
+                                .to_owned()
+                        })
+                    });
+                    note.set_visible(text.is_some());
+                    if let Some(text) = text {
+                        note.set_label(&text);
+                    }
+                    glib::ControlFlow::Continue
+                }
+            ),
+        );
+        if current {
+            media.play();
+        }
+    }
+
+    /// The thumbnail with a spinner over it.
+    fn loading_placeholder(&self, file: &PostFile) -> gtk::Overlay {
+        let preview = gtk::Picture::builder()
+            .content_fit(gtk::ContentFit::Contain)
+            .can_shrink(true)
+            .hexpand(true)
+            .vexpand(true)
+            .build();
+        let spinner = adw::Spinner::builder()
+            .width_request(32)
+            .height_request(32)
+            .halign(gtk::Align::Center)
+            .valign(gtk::Align::Center)
+            .build();
+        let loading = gtk::Overlay::builder().child(&preview).build();
+        loading.add_overlay(&spinner);
+        let thumb_url = file.thumb_url.clone();
+        glib::spawn_future_local(glib::clone!(
+            #[weak]
+            preview,
+            async move {
+                if let Some(texture) = thumbnails::load(&thumb_url).await {
+                    preview.set_paintable(Some(&texture));
+                }
+            }
+        ));
+        loading
+    }
+
+    /// Replaces a video that stopped with the reason, unless the slot has
+    /// moved on (already showing an error, or unloaded).
+    fn fail_media(&self, slot: &gtk::Box, overlay: &gtk::Overlay, file: &PostFile, text: &str) {
+        if slot.first_child().as_ref() != Some(overlay.upcast_ref()) {
+            return;
+        }
+        unload(slot);
+        self.show_error(slot, file, text, true);
     }
 
     fn show_error(&self, slot: &gtk::Box, file: &PostFile, message: &str, retry: bool) {
@@ -630,6 +770,11 @@ impl MediaViewer {
     // Actions
     // ------------------------------------------------------------------
 
+    #[cfg(debug_assertions)]
+    pub fn dev_step(&self, delta: i32) {
+        self.step(delta);
+    }
+
     /// Debug builds: zoom the current image as if its centre were clicked.
     #[cfg(debug_assertions)]
     pub fn dev_toggle_zoom(&self) {
@@ -669,6 +814,62 @@ impl MediaViewer {
     }
 }
 
+const RATE_LIMIT_TEXT: &str =
+    "The site is limiting how fast files load (HTTP 429). Wait a minute, then try again.";
+
+/// Why a downloaded file (image or GIF) couldn't be shown.
+fn fetch_error_text(err: &FetchError) -> String {
+    match err {
+        FetchError::Status { status: 429, .. } => RATE_LIMIT_TEXT.to_owned(),
+        FetchError::Status { status: 404, .. } => {
+            "The file is gone (HTTP 404). It may have been deleted.".to_owned()
+        }
+        FetchError::Status { status, .. } => format!("The site answered {status}."),
+        other => other.to_string(),
+    }
+}
+
+/// Why a video stopped (`started`: it had begun playing), from the
+/// player's error: our stream's own reasons first, then GStreamer's.
+fn playback_error_text(message: &str, started: bool) -> String {
+    let lead = if started {
+        "Playback stopped."
+    } else {
+        "The video couldn't be loaded."
+    };
+    let lower = message.to_lowercase();
+    let reason = if message.contains(http_stream::RATE_LIMITED) {
+        RATE_LIMIT_TEXT.to_owned()
+    } else if let Some(i) = lower.find("the server answered ") {
+        let code = message[i + "the server answered ".len()..]
+            .split(|c: char| !c.is_ascii_digit())
+            .next()
+            .unwrap_or_default();
+        if code == "404" {
+            "The file is gone (HTTP 404). It may have been deleted.".to_owned()
+        } else {
+            format!("The site answered {code}.")
+        }
+    } else if lower.contains("couldn't connect") {
+        "Couldn't reach the site. Check your connection, then try again.".to_owned()
+    } else if lower.contains("download was interrupted") {
+        "The site stopped sending the video partway through.".to_owned()
+    } else if lower.contains("missing a plug-in")
+        || lower.contains("no decoder available")
+        || lower.contains("no suitable plugins")
+    {
+        "Your system is missing the GStreamer plugins for this video. Install the \"good\" \
+         and libav plugins (gst-plugins-good and gst-libav on Arch)."
+            .to_owned()
+    } else {
+        format!(
+            "The player said: {}",
+            message.lines().next().unwrap_or(message)
+        )
+    };
+    format!("{lead} {reason}")
+}
+
 // Helpers over a slot's (single) child.
 
 fn unload(slot: &gtk::Box) {
@@ -679,24 +880,23 @@ fn unload(slot: &gtk::Box) {
 }
 
 fn media_of(slot: &gtk::Box) -> Option<gtk::MediaStream> {
-    let child = slot.first_child()?;
-    if let Some(video) = child.downcast_ref::<gtk::Video>() {
-        return video.media_stream();
-    }
-    child
-        .downcast_ref::<gtk::Picture>()?
-        .paintable()
-        .and_downcast::<gtk::MediaStream>()
+    // Videos sit under their loading overlay.
+    let overlay = slot.first_child().and_downcast::<gtk::Overlay>()?;
+    overlay.child().and_downcast::<gtk::Video>()?.media_stream()
 }
 
 fn pause(slot: &gtk::Box) {
-    if let Some(media) = media_of(slot) {
+    if let Some(gif) = slot.first_child().and_downcast::<AnimatedImage>() {
+        gif.pause();
+    } else if let Some(media) = media_of(slot) {
         media.pause();
     }
 }
 
 fn play(slot: &gtk::Box) {
-    if let Some(media) = media_of(slot) {
+    if let Some(gif) = slot.first_child().and_downcast::<AnimatedImage>() {
+        gif.play();
+    } else if let Some(media) = media_of(slot) {
         media.play();
     }
 }
@@ -704,5 +904,33 @@ fn play(slot: &gtk::Box) {
 fn reset_zoom(slot: &gtk::Box) {
     if let Some(image) = slot.first_child().and_downcast::<ZoomableImage>() {
         image.reset();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn playback_reasons() {
+        let text = playback_error_text(http_stream::RATE_LIMITED, false);
+        assert!(text.starts_with("The video couldn't be loaded."));
+        assert!(text.contains("HTTP 429"));
+        assert!(playback_error_text("the server answered 404", true).contains("deleted"));
+        assert!(
+            playback_error_text("the server answered 503", true)
+                .ends_with("The site answered 503.")
+        );
+        // GStreamer's element paths mention "plugins/elements"; that's not
+        // a missing plugin.
+        let generic = "Internal data stream error.\n../plugins/elements/gsttypefindelement.c";
+        assert!(
+            playback_error_text(generic, true)
+                .contains("The player said: Internal data stream error.")
+        );
+        assert!(
+            playback_error_text("Your GStreamer installation is missing a plug-in.", false)
+                .contains("gst-libav")
+        );
     }
 }

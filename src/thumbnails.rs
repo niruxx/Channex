@@ -1,13 +1,15 @@
 //! Loads remote images (thumbnails, favicons) as textures, with an
 //! in-memory cache of recent textures and an on-disk cache of the raw
-//! files in `<user cache dir>/channex/thumbnails/`. At most 8 downloads
-//! run at once so a 150-thread catalog doesn't open 150 connections.
+//! files in `<user cache dir>/channex/thumbnails/` (cleared on the
+//! schedule and size limit set in Preferences; see `cache.rs`). At most 8
+//! downloads run at once so a 150-thread catalog doesn't open 150
+//! connections.
 
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 use gtk::{gdk, glib};
 use tokio::sync::Semaphore;
@@ -19,8 +21,6 @@ use crate::state::state;
 /// 250x250 (~250 KB decoded), so this is roughly 60 MB at most.
 const MEMORY_ENTRIES: usize = 250;
 const MAX_PARALLEL: usize = 8;
-/// Cached files untouched for this long are deleted at startup.
-const DISK_MAX_AGE: Duration = Duration::from_secs(7 * 24 * 3600);
 
 #[derive(Default)]
 struct MemoryCache {
@@ -55,7 +55,7 @@ fn semaphore() -> Arc<Semaphore> {
         .clone()
 }
 
-fn cache_dir() -> PathBuf {
+pub fn cache_dir() -> PathBuf {
     glib::user_cache_dir().join("channex").join("thumbnails")
 }
 
@@ -84,6 +84,11 @@ pub async fn load(url: &str) -> Option<gdk::Texture> {
     let bytes = runtime::spawn(async move {
         let path = cache_dir().join(cache_name(&owned));
         if let Ok(bytes) = tokio::fs::read(&path).await {
+            // Mark it as recently used: the size limit evicts the least
+            // recently used images first (see cache.rs).
+            if let Ok(file) = std::fs::File::options().append(true).open(&path) {
+                let _ = file.set_modified(SystemTime::now());
+            }
             return Some(bytes);
         }
         let _permit = semaphore().acquire_owned().await.ok()?;
@@ -99,23 +104,8 @@ pub async fn load(url: &str) -> Option<gdk::Texture> {
     Some(texture)
 }
 
-/// Deletes stale files from the disk cache, in the background.
-pub fn prune_disk_cache() {
-    std::thread::spawn(|| {
-        let Ok(entries) = std::fs::read_dir(cache_dir()) else {
-            return;
-        };
-        let now = SystemTime::now();
-        for entry in entries.flatten() {
-            let stale = entry
-                .metadata()
-                .and_then(|m| m.modified())
-                .ok()
-                .and_then(|t| now.duration_since(t).ok())
-                .is_some_and(|age| age > DISK_MAX_AGE);
-            if stale {
-                let _ = std::fs::remove_file(entry.path());
-            }
-        }
-    });
+/// Forgets every texture held in memory (after the disk cache is
+/// cleared, so nothing stale is shown).
+pub fn clear_memory() {
+    MEMORY.with(|m| *m.borrow_mut() = MemoryCache::default());
 }

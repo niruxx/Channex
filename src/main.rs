@@ -1,5 +1,6 @@
 mod application;
 mod birthday;
+mod cache;
 mod config;
 #[cfg(debug_assertions)]
 mod devtools;

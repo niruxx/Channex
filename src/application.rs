@@ -6,7 +6,7 @@ use adw::subclass::prelude::*;
 use gtk::{gio, glib};
 
 use crate::window::ChannexWindow;
-use crate::{config, state, thumbnails};
+use crate::{config, state};
 
 mod imp {
     use super::*;
@@ -32,7 +32,9 @@ mod imp {
             self.parent_startup();
             let app = self.obj();
             self.load_outcome.replace(Some(state::init()));
-            thumbnails::prune_disk_cache();
+            crate::cache::start();
+            #[cfg(debug_assertions)]
+            crate::devtools::start_watchdog();
             crate::theme::apply();
             state::state().connect_closure(
                 "settings-changed",
