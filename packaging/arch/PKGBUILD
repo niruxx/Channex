@@ -10,6 +10,9 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/niruxx/Channex"
 license=('LicenseRef-unknown')
 depends=('gtk4' 'libadwaita' 'glib2' 'cairo' 'pango' 'gdk-pixbuf2' 'graphene' 'gcc-libs' 'glibc')
+# Video and GIF playback in the media viewer.
+optdepends=('gst-plugins-good: play webm videos and GIFs'
+            'gst-libav: play mp4 videos')
 # cmake: builds aws-lc, the TLS crypto library.
 makedepends=('cargo' 'blueprint-compiler' 'cmake')
 # makepkg's LTO flags turn the bundled C crypto library (aws-lc) into

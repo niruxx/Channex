@@ -61,13 +61,19 @@ pub fn schedule_screenshot(window: &crate::window::ChannexWindow) {
                 let zoom = parts.get(5).is_some_and(|p| p == "zoom");
                 let window = window.clone();
                 glib::timeout_add_local_once(std::time::Duration::from_millis(3000), move || {
-                    if let Some(page) = window.visible_page().and_downcast::<crate::pages::ThreadPage>() {
+                    if let Some(page) = window
+                        .visible_page()
+                        .and_downcast::<crate::pages::ThreadPage>()
+                    {
                         page.open_media_at(index);
                     }
                     if zoom {
-                        glib::timeout_add_local_once(std::time::Duration::from_millis(3000), move || {
-                            window.dev_media_viewer().dev_toggle_zoom();
-                        });
+                        glib::timeout_add_local_once(
+                            std::time::Duration::from_millis(3000),
+                            move || {
+                                window.dev_media_viewer().dev_toggle_zoom();
+                            },
+                        );
                     }
                 });
             }

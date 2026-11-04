@@ -13,6 +13,7 @@
     <ul>
       <li>Catalogs as a grid or list, with search and sorting</li>
       <li>Threads with quote previews and reply links</li>
+      <li>View images, GIFs and videos full-window, with zoom</li>
       <li>Bookmarks that count new replies</li>
       <li>Download a thread's files, choosing which ones</li>
       <li>Reply from the app on LynxChan sites</li>
@@ -62,6 +63,7 @@
         <ul>
           <li>New look that follows the system style and accent color</li>
           <li>Quote previews, a reply dialog, and a download picker</li>
+          <li>A new media viewer with zoom, video playback and a filmstrip</li>
           <li>Lainchan threads, thumbnails and boards now load</li>
           <li>Settings and bookmarks from the Qt version are imported</li>
           <li>8chan.moe was removed: its API now blocks apps</li>

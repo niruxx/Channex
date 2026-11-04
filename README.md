@@ -28,6 +28,9 @@ Linux is the main platform. Windows support is planned (see
 - **Threads:** quote links scroll to the quoted post, hovering one shows a
   preview, and every post lists its replies. Three post styles. Right-click
   a post to reply, copy it, download its files, or (on 4chan) report it.
+- **Media viewer:** images, GIFs and videos full-window, with swipe or
+  arrow keys between files, click or pinch to zoom, and a filmstrip of
+  every file in the thread.
 - **Bookmarks** that count new replies since you last looked.
 - **Downloads:** pick which of a thread's files to save; four download at
   a time, into a folder per thread (named by number or subject), with
@@ -45,8 +48,6 @@ Linux is the main platform. Windows support is planned (see
 
 ### Not yet
 
-- **No built-in media viewer:** clicking a file opens it in your
-  browser. A viewer with zoom and video playback is planned.
 - **Windows** builds are the last item on the roadmap.
 - **8chan.moe** isn't supported: its API now blocks apps that aren't
   web browsers.
@@ -66,7 +67,8 @@ each [GitHub release](https://github.com/niruxx/Channex/releases).
 ## Building
 
 Requires Rust (stable), GTK 4.18+, libadwaita 1.8+, blueprint-compiler,
-and CMake (for the TLS library).
+and CMake (for the TLS library). Video playback needs GStreamer's good
+plugins and libav (`gst-plugins-good gst-libav` on Arch).
 
 ```sh
 # Arch
@@ -121,7 +123,8 @@ dbus-run-session -- sh -c '
 `CHANNEX_DEV_PAGE` opens something first: `bookmarks`, `preferences`,
 `preferences:sites`, `add-site`, or `<what>:<site>:<board>:<thread>` where
 `<what>` is `thread`, `reply`, `download-dialog`, or `download-test`
-(downloads the thread's first six files). Point `XDG_DATA_HOME` at a
+(downloads the thread's first six files), or
+`media:<site>:<board>:<thread>:<file index>[:zoom]`. Point `XDG_DATA_HOME` at a
 scratch folder to use test settings.
 
 ## Architecture
@@ -152,6 +155,7 @@ own. The **binary** is the GTK app on top of it.
 | `src/state.rs` | App-wide state (store, HTTP client, board lists) with change signals |
 | `src/downloads.rs` | Download manager |
 | `src/theme.rs` | Light/dark, accent color, classic skins |
+| `src/viewer/` | Media viewer: carousel, zoomable images, video |
 | `src/thumbnails.rs` | Image loading with memory and disk caches |
 | `src/runtime.rs` | Background runtime for network work |
 | `src/devtools.rs` | Debug-only helpers (headless screenshots) |

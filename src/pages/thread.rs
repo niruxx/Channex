@@ -636,7 +636,12 @@ impl ThreadPage {
     /// Opens the thread's files in the media viewer, at `file`.
     /// Opens the viewer at the thread's `index`th file.
     pub fn open_media_at(&self, index: usize) {
-        let file = self.imp().thread.borrow().as_ref().and_then(|t| t.all_files().get(index).map(|f| (*f).clone()));
+        let file = self
+            .imp()
+            .thread
+            .borrow()
+            .as_ref()
+            .and_then(|t| t.all_files().get(index).map(|f| (*f).clone()));
         if let Some(file) = file {
             self.open_file(&file);
         }
@@ -672,7 +677,13 @@ impl ThreadPage {
             thread.op.subject.clone()
         };
         let naming = state().data().settings.download_folder_naming;
-        Some(thread_folder_name(naming, &self.site().id, self.board(), self.thread_id(), &title))
+        Some(thread_folder_name(
+            naming,
+            &self.site().id,
+            self.board(),
+            self.thread_id(),
+            &title,
+        ))
     }
 
     fn open_in_browser(&self) {

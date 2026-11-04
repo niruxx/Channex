@@ -609,7 +609,12 @@ impl ChannexWindow {
     }
 
     /// Shows files full-window, starting at `index`.
-    pub fn open_media(&self, files: Vec<channex::data::model::PostFile>, index: usize, context: crate::viewer::ViewerContext) {
+    pub fn open_media(
+        &self,
+        files: Vec<channex::data::model::PostFile>,
+        index: usize,
+        context: crate::viewer::ViewerContext,
+    ) {
         if let Some(viewer) = self.imp().viewer.get() {
             viewer.open(files, index, context);
         }

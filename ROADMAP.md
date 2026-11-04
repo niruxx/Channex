@@ -180,10 +180,9 @@ store at app startup, since that's where the UI first needs them.
   naming settings to Phase 7, so each arrives with the feature it
   controls.
 
-## Phase 6 — Media viewer (moved to Future features)
+## Phase 6 — Media viewer (moved to Future features, now done)
 
-Deferred: see [Future features](#future-features). Until then, clicking a
-file in a thread opens it in the browser.
+See [Media viewer](#media-viewer-was-phase-6-) under Future features.
 
 ## Phase 7 — Downloads ✅
 
@@ -294,20 +293,28 @@ The last phase to be worked on: it comes after every other phase.
 
 Planned, but after the phases above.
 
-### Media viewer (was Phase 6)
+### Media viewer (was Phase 6) ✅
 
-- [ ] Full-window media viewer over the app, using `AdwCarousel` for
-      prev/next and swipe.
-- [ ] Images in `GtkPicture`: click or pinch to zoom, drag to pan, plus
-      animated GIF support.
-- [ ] Video (webm/mp4) through `GtkVideo` / `GtkMediaFile` (GStreamer
-      backend): play/pause, seek, mute, honouring "mute by default".
-- [ ] Filmstrip of every file in the thread.
-- [ ] Save to Disk and Add to Downloads buttons, Esc to close, arrow keys
-      to move between files.
-- [ ] "Couldn't load" state with Retry and Open in Browser.
-- [ ] "Mute videos by default" setting (Preferences → Content), applied
-      when a video starts.
+- [x] Full-window viewer over the app (under the toasts), with an
+      `AdwCarousel` for swipe plus arrow buttons and the Left/Right keys.
+      Only the current file and its neighbours are loaded; videos pause
+      when you move away.
+- [x] Images: the thumbnail shows while the full file downloads. Click to
+      zoom to actual size (2× for small images) centred on the click, and
+      click again to fit; drag to pan; pinch or Ctrl+scroll to zoom.
+- [x] GIFs animate (as a silent looping stream).
+- [x] Video (webm/mp4) streams through GTK's GStreamer backend with
+      GTK's own controls (play/pause, seek, volume), honouring "Mute
+      videos by default".
+- [x] Filmstrip of every file in the thread; the current one is
+      highlighted and kept in view.
+- [x] Save (into the thread's download folder, through the download
+      manager) and Open in Browser in the header; Esc closes.
+- [x] "Couldn't show this file" with Try Again and Open in Browser - also
+      used for files it can't display, like Lainchan's PDFs.
+- [x] "Mute Videos by Default" in Preferences → Content.
+- Checked headlessly with a Lainchan image, a PDF and zoom, and a webm
+  and a GIF from 4chan's work-safe /wsg/ board.
 
 ### Birthday hats
 
@@ -337,11 +344,11 @@ with the phase that brings it over.
 | Classic imageboard skins (5) | 5 |
 | Reply display styles (3) | 4 |
 | Onboarding wizard (5 steps, skippable, replayable) | 5 |
-| Lightbox: prev/next, swipe, zoom, filmstrip, video controls | Future |
-| Save to disk / queue from lightbox | Future |
+| Lightbox: prev/next, swipe, zoom, filmstrip, video controls | Future ✅ |
+| Save to disk / queue from lightbox | Future ✅ |
 | Download picker dialog + 4-way concurrent download manager | 7 |
 | Thread folder naming (ID or name) | 7 |
-| Mute videos by default | Future |
+| Mute videos by default | Future ✅ |
 | Birthday hats | Future |
 | LynxChan in-app posting with captcha | 8 |
 | External reply handoff + 4chan Pass sign-in | 8 |
