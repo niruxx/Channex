@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/io/github/niruxx/Channex">
+    <!-- Compiled from data/ui/*.blp by build.rs into OUT_DIR/ui -->
+    <file preprocess="xml-stripblanks">ui/window.ui</file>
+    <file preprocess="xml-stripblanks">ui/shortcuts.ui</file>
+    <file>style.css</file>
+    <!-- libadwaita adds <prefix>/icons to the icon theme search path,
+         so the app icon resolves in-app (About dialog) even before the
+         app is installed. -->
+    <file alias="icons/scalable/apps/io.github.niruxx.Channex.svg">icons/hicolor/scalable/apps/io.github.niruxx.Channex.svg</file>
+  </gresource>
+</gresources>

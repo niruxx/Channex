@@ -1,0 +1,8 @@
+[
+  {"threadId": 100, "subject": "Hi", "message": "first line\nsecond line", "markdown": "",
+   "pinned": true, "locked": false, "postCount": 5, "fileCount": 2,
+   "lastBump": "2023-11-14T22:13:20.000Z", "thumb": "/.media/t_abc", "mime": "image/png"},
+  {"threadId": 102, "subject": "", "message": ">>100 hi",
+   "markdown": "<a class=\"quoteLink\" href=\"/b/res/100.html#100\">&gt;&gt;100</a> hi",
+   "postCount": 1, "fileCount": 0, "lastBump": "2023-11-14T22:00:00.000Z"}
+]

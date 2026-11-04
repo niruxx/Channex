@@ -3,28 +3,47 @@
 # Builds from the local working tree (two directories up), not a
 # downloaded tarball. Run `makepkg -si` from this directory.
 pkgname=channex
-pkgver=0.1.2
+pkgver=0.2.0
 pkgrel=1
-pkgdesc="Native Qt6/QML desktop viewer for chan-style imageboards"
-arch=('x86_64')
+pkgdesc="Native GTK/libadwaita viewer for chan-style imageboards"
+arch=('x86_64' 'aarch64')
 url="https://github.com/niruxx/Channex"
 license=('LicenseRef-unknown')
-depends=('qt6-base' 'qt6-declarative' 'qt6-multimedia' 'qt6-svg' 'gcc-libs' 'glibc')
-makedepends=('cmake' 'qt6-shadertools')
-source=('channex.desktop')
-sha256sums=('SKIP')
+depends=('gtk4' 'libadwaita' 'glib2' 'cairo' 'pango' 'gdk-pixbuf2' 'graphene' 'gcc-libs' 'glibc')
+# cmake: builds aws-lc, the TLS crypto library.
+makedepends=('cargo' 'blueprint-compiler' 'cmake')
+# makepkg's LTO flags turn the bundled C crypto library (aws-lc) into
+# LTO bitcode that the Rust linker can't resolve.
+options=('!lto')
+source=()
+sha256sums=()
 
 _srcroot="$(realpath "$startdir/../..")"
+_appid=io.github.niruxx.Channex
+
+prepare() {
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --manifest-path "$_srcroot/Cargo.toml" \
+    --target "$(rustc -vV | sed -n 's/host: //p')"
+}
 
 build() {
-  cmake -S "$_srcroot" -B build \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr
-  cmake --build build --parallel "$(nproc)"
+  export RUSTUP_TOOLCHAIN=stable
+  # Keep build output out of the working tree.
+  export CARGO_TARGET_DIR="$srcdir/target"
+  cargo build --frozen --release --manifest-path "$_srcroot/Cargo.toml"
+}
+
+check() {
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR="$srcdir/target"
+  cargo test --frozen --release --manifest-path "$_srcroot/Cargo.toml"
 }
 
 package() {
-  DESTDIR="$pkgdir" cmake --install build
-  install -Dm644 "$srcdir/channex.desktop" "$pkgdir/usr/share/applications/channex.desktop"
-  install -Dm644 "$_srcroot/resources/icons/app.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/channex.svg"
+  install -Dm755 "$srcdir/target/release/channex" "$pkgdir/usr/bin/channex"
+  install -Dm644 "$_srcroot/data/$_appid.desktop" "$pkgdir/usr/share/applications/$_appid.desktop"
+  install -Dm644 "$_srcroot/data/$_appid.metainfo.xml" "$pkgdir/usr/share/metainfo/$_appid.metainfo.xml"
+  install -Dm644 "$_srcroot/data/icons/hicolor/scalable/apps/$_appid.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/$_appid.svg"
 }

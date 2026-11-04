@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.niruxx.Channex</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <!-- TODO: add <project_license> once the repo has a license (needed for Flathub). -->
+  <name>Channex</name>
+  <summary>Browse imageboards</summary>
+  <description>
+    <p>
+      A native app for chan-style imageboards such as 4chan, 8kun and
+      Lainchan, plus any 4chan-API-compatible or LynxChan site you add.
+    </p>
+    <ul>
+      <li>Catalogs as a grid or list, with search and sorting</li>
+      <li>Threads with quote previews and reply links</li>
+      <li>Bookmarks that count new replies</li>
+      <li>Download a thread's files, choosing which ones</li>
+      <li>Reply from the app on LynxChan sites</li>
+      <li>Follows your system style and accent color, with classic imageboard skins</li>
+    </ul>
+  </description>
+  <developer id="io.github.niruxx">
+    <name>niruxxdaboi</name>
+  </developer>
+  <launchable type="desktop-id">io.github.niruxx.Channex.desktop</launchable>
+  <url type="homepage">https://github.com/niruxx/Channex</url>
+  <url type="bugtracker">https://github.com/niruxx/Channex/issues</url>
+  <url type="vcs-browser">https://github.com/niruxx/Channex</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>A board's catalog</caption>
+      <image>https://raw.githubusercontent.com/niruxx/Channex/main/screenshots/catalog.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Reading a thread</caption>
+      <image>https://raw.githubusercontent.com/niruxx/Channex/main/screenshots/thread.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Preferences</caption>
+      <image>https://raw.githubusercontent.com/niruxx/Channex/main/screenshots/preferences.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>A classic imageboard skin</caption>
+      <image>https://raw.githubusercontent.com/niruxx/Channex/main/screenshots/skins.png</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-chat">intense</content_attribute>
+  </content_rating>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </supports>
+  <releases>
+    <release version="0.2.0" date="2026-11-04">
+      <description>
+        <p>Channex is now a GTK 4 and libadwaita app, rewritten in Rust.</p>
+        <ul>
+          <li>New look that follows the system style and accent color</li>
+          <li>Quote previews, a reply dialog, and a download picker</li>
+          <li>Lainchan threads, thumbnails and boards now load</li>
+          <li>Settings and bookmarks from the Qt version are imported</li>
+          <li>8chan.moe was removed: its API now blocks apps</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+</component>

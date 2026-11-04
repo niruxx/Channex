@@ -1,168 +1,168 @@
 # Channex
 
-A native **Qt6 / C++ / QML** desktop viewer for chan-style imageboards
-(4chan, 8kun, 8chan.moe, Lainchan, and other 4chan-API-compatible or
-LynxChan-based sites). This is a from-scratch rebuild of an earlier
-Tauri + React version of the same app — that version is preserved,
-unmaintained, under [`Legacy_Tauri_Builds/`](Legacy_Tauri_Builds/) for
-reference. This directory (the repo root) is now the active project.
+A native desktop app for browsing chan-style imageboards: 4chan, 8kun,
+Lainchan, and any other site with a 4chan-compatible API (vichan) or
+running LynxChan. Built with **GTK 4 and libadwaita in Rust**, so it looks
+and behaves like a GNOME app.
 
-## Screenshots
+Linux is the main platform. Windows support is planned (see
+[ROADMAP.md](ROADMAP.md)).
 
 | Catalog | Thread |
 |---|---|
-| ![Catalog view](screenshots/catalog.png) | ![Thread view](screenshots/thread.png) |
+| ![A board's catalog as a grid of thread cards](screenshots/catalog.png) | ![A thread with posts, files and reply links](screenshots/thread.png) |
 
-| Lightbox | Settings |
+| Preferences | Classic skins |
 |---|---|
-| ![Media lightbox](screenshots/lightbox.png) | ![Settings](screenshots/settings.png) |
-
-## Demo video
-
-Removed. The recording used to demo the catalog/thread/lightbox flow
-happened to capture a piece of NSFW content from a live board while
-scrolling, which wasn't caught before the file was committed — it's
-been deleted and won't be replaced with another repo-hosted recording.
+| ![The Preferences dialog](screenshots/preferences.png) | ![A thread in the Yotsuba skin](screenshots/skins.png) |
 
 ## Features
 
-- Site switching across 4 presets (4chan, 8kun, 8chan.moe, Lainchan)
-  plus adding/removing custom sites, persisted to disk.
-- Board discovery per site with fallback to built-in default boards.
-- Catalog view (grid/compact/list, animated switch between them), live
-  search, 4 sort modes with stickies pinned first, NSFW/spoiler
-  blur-until-tapped.
-- Thread view: OP + replies, quote-link and backlink navigation, a
-  "Download" button that opens a tile-grid picker to select exactly
-  which files to queue.
-- Media lightbox: prev/next, drag-to-swipe, click-to-zoom, a thumbnail
-  filmstrip across every file in the thread (not just the current
-  post's), full playback controls for video (play/pause, seek bar,
-  mute), save-to-disk / queue-to-downloads.
-- Download manager: 4-way concurrent worker pool, collision-safe
-  filenames, session-only job list.
-- Bookmarks with "new replies since last seen" tracking.
-- Settings: theme (dark/light/system), accent color, animated
-  background, catalog view mode, NSFW toggles, mute-by-default,
-  download folder, custom site management — laid out as a centered,
-  card-based page.
-- First-run onboarding wizard (5 steps, skippable, replayable).
-- In-app LynxChan posting (captcha fetch + multipart reply) for
-  8kun/8chan.moe-style sites.
-- Custom frameless window chrome with platform-correct control
-  placement (macOS traffic lights left, Windows/Linux buttons right).
-  Windows drags the window manually (avoids the native-move-loop
-  stutter `startSystemMove()` causes there); Linux/macOS use
-  `startSystemMove()` directly, which is required on Wayland (a client
-  can't reposition its own window at all there - only a
-  compositor-driven move works) and is already smooth on X11/macOS.
+- **Sites and boards:** 4chan, 8kun and Lainchan built in, plus any
+  custom 4chan-style or LynxChan site. Each site's board list is fetched
+  live (with a built-in fallback), can be filtered, and boards can be
+  hidden from the sidebar.
+- **Catalog:** grid, compact grid or list; search (or paste a thread link
+  to jump to it); sort by latest bump, replies, images or age, with
+  stickies first. NSFW and spoiler thumbnails are blurred until clicked.
+- **Threads:** quote links scroll to the quoted post, hovering one shows a
+  preview, and every post lists its replies. Three post styles. Right-click
+  a post to reply, copy it, download its files, or (on 4chan) report it.
+- **Bookmarks** that count new replies since you last looked.
+- **Downloads:** pick which of a thread's files to save; four download at
+  a time, into a folder per thread (named by number or subject), with
+  progress, retries, and a toast when done.
+- **Replying:** in the app on LynxChan sites (with their captcha). On
+  4chan, Lainchan and 8kun, write your reply in Channex and continue on
+  the site, whose captcha only works there.
+- **Appearance:** follows the system's light/dark style and accent color,
+  or set your own; five classic imageboard skins (Yotsuba, Yotsuba B,
+  Futaba, Photon, Burichan).
+- **Keyboard:** Ctrl+F search, F5 refresh, Ctrl+D bookmark, F9 sidebar,
+  Alt+Left back, Ctrl+, preferences, Ctrl+? for the full list.
+- A welcome tour on first launch. Settings and bookmarks from the earlier
+  Qt version of Channex are imported automatically.
 
-## Known parity gaps
+### Not yet
 
-This is under active development, not a finished 1:1 port of the old
-Tauri app. Things intentionally left for later:
+- **No built-in media viewer:** clicking a file opens it in your
+  browser. A viewer with zoom and video playback is planned.
+- **Windows** builds are the last item on the roadmap.
+- **8chan.moe** isn't supported: its API now blocks apps that aren't
+  web browsers.
 
-- **External-site reply flow has no auto-refresh.** The old Tauri app
-  opened an *embedded* secondary window for CAPTCHA-gated sites (4chan,
-  Lainchan) and auto-refreshed the thread when the user closed it.
-  Doing that here needs `QtWebEngine` embedded in a popup, which isn't
-  wired in yet — `ExternalReply` opens the system browser instead
-  (comment still copied to clipboard), and the user has to hit refresh
-  manually. See `src/posting/ExternalReply.h`.
-- **`CommentFormatter` is a regex-based approximation of a real HTML
-  sanitizer**, not a hardened parser. It's tuned against the shapes
-  4chan/vichan and LynxChan actually emit.
-- **No animated-background pixel parity** with the old app's CSS
-  keyframes. `aurora`/`particles`/`grid` are reimplemented with
-  QML-native mechanisms (drifting blurred `Rectangle`s,
-  `QtQuick.Particles`, a panning `Canvas` grid).
-- **No birthday hats, no favicon cascade for custom sites** — pure
-  "delight" features from the old app, not ported yet.
-- **Spoiler reveal-on-hover isn't replicated** in thread comment text
-  (`<span class="spoiler">` becomes a static "black box" instead of a
-  hover-to-reveal one) — a `Text.RichText` limitation.
-- **Theme color tokens are an approximation**, not pixel-matched
-  against any specific design reference.
+## Installing
+
+**Arch Linux**, from a clone of this repository:
+
+```sh
+cd packaging/arch
+makepkg -si
+```
+
+Release builds (an Arch package and a Flatpak bundle) are attached to
+each [GitHub release](https://github.com/niruxx/Channex/releases).
 
 ## Building
 
-Requires **Qt 6.5+** (Core, Gui, Qml, Quick, QuickControls2, Network,
-Multimedia — plus the Qt Quick Dialogs QML module, used for the
-folder-picker, which ships as part of Qt's declarative module) and
-**CMake 3.21+**. Developed and tested against **Qt 6.8.3 with MSVC
-2022 on Windows**; the app has no Windows-specific code (no Win32
-API calls, no hardcoded paths) so it should build and run as-is on
-Linux and macOS, but those platforms haven't been verified first-hand.
+Requires Rust (stable), GTK 4.18+, libadwaita 1.8+, blueprint-compiler,
+and CMake (for the TLS library).
 
 ```sh
-cmake -B build -DCMAKE_PREFIX_PATH="<path-to-your-Qt6-install>/lib/cmake"
-cmake --build build --config Debug
+# Arch
+sudo pacman -S rust gtk4 libadwaita blueprint-compiler cmake
+# Fedora
+sudo dnf install rust cargo gtk4-devel libadwaita-devel blueprint-compiler cmake
+
+cargo run
 ```
 
-Then run the built `channex_qt` (`channex_qt.exe` on Windows, under
-`build/Debug/` or `build/Release/`) binary directly — on Windows, a
-post-build step automatically runs `windeployqt` so the Qt DLLs and
-QML plugins it needs are already sitting next to the exe.
+On Debian or Ubuntu, use a release that ships libadwaita 1.8 or newer
+(`libgtk-4-dev libadwaita-1-dev blueprint-compiler cmake`).
 
-### Windows installer
-
-A Release build also wires up `CPack` with the NSIS generator, so a
-single command turns the build into a proper installer
-(`channex_qt.exe`, its Qt runtime, and the MSVC redistributable DLLs,
-with a Start Menu shortcut and uninstaller). Requires
-[NSIS](https://nsis.sourceforge.io/) on `PATH` (`winget install
-NSIS.NSIS`):
+### Flatpak
 
 ```sh
-cmake --build build --config Release
-cd build && cpack -C Release
+# Needs flatpak-builder, the GNOME 50 SDK and the Rust SDK extension.
+pip install aiohttp tomlkit
+curl -LO https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/cargo/flatpak-cargo-generator.py
+python3 flatpak-cargo-generator.py Cargo.lock -o packaging/flatpak/cargo-sources.json
+flatpak-builder --user --install --force-clean packaging/flatpak/build-dir \
+  packaging/flatpak/io.github.niruxx.Channex.json
 ```
 
-This produces `build/Channex-<version>-win64.exe`.
+### Releases
 
-On Linux, install Qt6 via your distro's packages (e.g. on Debian/
-Ubuntu: `qt6-base-dev qt6-declarative-dev qt6-multimedia-dev
-qt6-quickcontrols2-dev qml6-module-qtquick-dialogs
-qml6-module-qtquick-controls qml6-module-qtquick-layouts
-qml6-module-qtqml-workerscript` — package names vary by distro/version)
-or from Qt's own online installer, then point `CMAKE_PREFIX_PATH` at
-it the same way. The frameless custom titlebar drags correctly on both
-X11 and Wayland (see the note in Features above).
+Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds the
+Arch package and the Flatpak bundle and attaches them to the release.
 
-No CI or packaging config yet — add platform installers once the app
-is further along.
+## Development
+
+```sh
+cargo test                                  # offline tests (fixtures in tests/fixtures/)
+cargo test --test live -- --ignored         # adapters against the real sites
+cargo clippy --all-targets -- -D warnings
+```
+
+### Checking the UI headlessly
+
+Debug builds can render the window to a PNG and exit, which works inside
+a throwaway headless GNOME compositor:
+
+```sh
+cargo build
+dbus-run-session -- sh -c '
+  mutter --headless --wayland --no-x11 --virtual-monitor 1440x900 \
+         --wayland-display channex-test & sleep 2
+  WAYLAND_DISPLAY=channex-test CHANNEX_SCREENSHOT=$PWD/shot.png ./target/debug/channex'
+```
+
+`CHANNEX_SCREENSHOT_DELAY_MS` sets the wait (default 3000).
+`CHANNEX_DEV_PAGE` opens something first: `bookmarks`, `preferences`,
+`preferences:sites`, `add-site`, or `<what>:<site>:<board>:<thread>` where
+`<what>` is `thread`, `reply`, `download-dialog`, or `download-test`
+(downloads the thread's first six files). Point `XDG_DATA_HOME` at a
+scratch folder to use test settings.
 
 ## Architecture
 
-Business logic lives entirely in C++ (`src/`); QML (`qml/`) is purely
-the view layer. The core abstraction is `ChanAdapter` — a small
-interface (`fetchBoards`/`fetchCatalog`/`fetchThread`/`threadWebUrl`)
-with two implementations:
+The crate has two halves. The **library** (`src/lib.rs`, `src/data/`) is
+the imageboard core with no GTK dependency, so it can be tested on its
+own. The **binary** is the GTK app on top of it.
 
-- `YotsubaAdapter` — 4chan's native API and the vichan/Lainchan/8kun
-  family that copies its shape.
-- `LynxchanAdapter` — the LynxChan API (8chan.moe/8kun-family boards).
-
-| Domain | Files |
+| `src/data/` | What |
 |---|---|
-| Site adapters | `src/adapters/` |
-| Sites (presets + custom) | `src/sites/SitesController.{h,cpp}` |
-| Catalog | `src/catalog/CatalogController.{h,cpp}` (`QAbstractListModel`) |
-| Thread | `src/thread/ThreadController.{h,cpp}` (`QAbstractListModel`) |
-| Bookmarks | `src/bookmarks/BookmarksController.{h,cpp}` |
-| Downloads | `src/downloads/DownloadManager.{h,cpp}` |
-| Lightbox | `src/lightbox/LightboxController.{h,cpp}` + `LightboxImageProvider` |
-| LynxChan posting | `src/posting/LynxchanPoster.{h,cpp}` |
-| External-site reply | `src/posting/ExternalReply.{h,cpp}` |
-| Navigation (router) | `src/navigation/NavigationController.{h,cpp}` |
-| Settings persistence | `src/settings/SettingsManager.{h,cpp}` (`channex-qt-data.json`) |
-| Icon recoloring | `src/icons/IconProvider.{h,cpp}` (feeds `qml/components/AppIcon.qml`) |
+| `model.rs` | Sites, boards, posts, files, threads |
+| `adapters/` | Yotsuba (4chan, vichan, 8kun) and LynxChan API parsing |
+| `comment.rs` | Board HTML → a small inline tree → Pango markup |
+| `http.rs` | The shared HTTP client and its request policy |
+| `sites.rs` | Preset and custom sites, thread-link resolution |
+| `catalog.rs` | Catalog search and sort |
+| `store.rs` | Settings and bookmarks file (imports the Qt version's data) |
+| `downloads.rs` | Safe, unique file and folder names |
+| `posting.rs` | LynxChan captcha and reply API |
 
-`qml/components/` holds reusable pieces (theme-aware `AppButton`,
-`AppTextField`, etc., plus `AppIcon` for the monochrome SVG icon set
-under `resources/icons/ui/`); `qml/views/` holds the routed top-level
-views (catalog, thread, settings, ...). `Theme.qml` is a singleton
-holding the color/spacing tokens every component reads from.
+| App | What |
+|---|---|
+| `src/application.rs` | `AdwApplication`: app actions, About, shortcuts |
+| `src/window/` | Main window: sidebar, site switcher, navigation |
+| `src/pages/` | Catalog, thread, bookmarks and downloads pages |
+| `src/widgets/` | Catalog cards and rows, thread posts |
+| `src/dialogs/` | Preferences, Add Site, Reply, Download Files, Welcome tour |
+| `src/state.rs` | App-wide state (store, HTTP client, board lists) with change signals |
+| `src/downloads.rs` | Download manager |
+| `src/theme.rs` | Light/dark, accent color, classic skins |
+| `src/thumbnails.rs` | Image loading with memory and disk caches |
+| `src/runtime.rs` | Background runtime for network work |
+| `src/devtools.rs` | Debug-only helpers (headless screenshots) |
+| `data/` | Blueprint UI files, stylesheet, icon, desktop entry, metainfo |
+| `packaging/` | Arch PKGBUILD and Flatpak manifest |
+
+## History
+
+Channex started as a Tauri + React app, was rebuilt in Qt 6 / QML, and
+was then rewritten as this GTK app (version 0.2.0). The last Qt version
+is commit `7cef950`.
 
 ## AI usage disclaimer
 

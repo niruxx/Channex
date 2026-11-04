@@ -1,0 +1,8 @@
+{"posts": [
+  {"no": 1000, "resto": 0, "sticky": "1", "locked": 0, "time": 1600000000, "name": "Anonymous",
+   "sub": "Programming", "com": "General thread",
+   "tim": "1600000000001", "ext": ".png", "filename": "a", "w": 500, "h": 500, "tn_w": 255, "tn_h": 255, "fsize": 5000,
+   "extra_files": [{"tim": "1600000000002", "ext": ".jpg", "filename": "b", "w": 100, "h": 100, "fsize": 1000}]},
+  {"no": 1001, "resto": 1000, "time": 1600000100, "name": "Anonymous",
+   "com": "<a onclick=\"highlightReply('1000', event);\" href=\"/λ/res/1000.html#1000\">&gt;&gt;1000</a><br/>hello"}
+]}

@@ -1,0 +1,4 @@
+{"boards": [
+  {"board": "g", "title": "Technology", "ws_board": 1, "per_page": 15, "meta_description": "/g/ - Technology"},
+  {"board": "b", "title": "Random", "ws_board": 0, "per_page": 15, "meta_description": "&quot;/b/ - Random&quot;"}
+]}

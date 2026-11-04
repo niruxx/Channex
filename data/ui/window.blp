@@ -1,0 +1,180 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $ChannexWindow: Adw.ApplicationWindow {
+  title: _("Channex");
+  default-width: 1200;
+  default-height: 800;
+  width-request: 360;
+  height-request: 294;
+
+  Adw.Breakpoint {
+    condition ("max-width: 720sp")
+
+    setters {
+      split_view.collapsed: true;
+    }
+  }
+
+  content: Adw.ToastOverlay toast_overlay {
+    // The media viewer is added over this in code.
+    child: Overlay main_overlay {
+    child: Adw.OverlaySplitView split_view {
+      min-sidebar-width: 220;
+      max-sidebar-width: 300;
+
+      sidebar: Adw.ToolbarView {
+        [top]
+        Adw.HeaderBar sidebar_header {
+          [end]
+          MenuButton {
+            primary: true;
+            icon-name: "open-menu-symbolic";
+            tooltip-text: _("Main Menu");
+            menu-model: primary_menu;
+          }
+        }
+
+        content: Box {
+          orientation: vertical;
+
+          SearchEntry board_filter {
+            placeholder-text: _("Filter Boards");
+            margin-start: 12;
+            margin-end: 12;
+            margin-bottom: 6;
+          }
+
+          ScrolledWindow {
+            vexpand: true;
+            hscrollbar-policy: never;
+
+            child: Box {
+              orientation: vertical;
+
+              Label {
+                label: _("Library");
+                xalign: 0;
+                margin-start: 18;
+                margin-top: 6;
+                margin-bottom: 2;
+
+                styles [
+                  "caption-heading",
+                  "dim-label",
+                ]
+              }
+
+              ListBox library_list {
+                selection-mode: single;
+
+                styles [
+                  "navigation-sidebar",
+                ]
+              }
+
+              Box {
+                margin-start: 18;
+                margin-end: 18;
+                margin-top: 12;
+                margin-bottom: 2;
+                spacing: 6;
+
+                Label {
+                  label: _("Boards");
+                  xalign: 0;
+                  hexpand: true;
+
+                  styles [
+                    "caption-heading",
+                    "dim-label",
+                  ]
+                }
+
+                Adw.Spinner boards_spinner {
+                  visible: false;
+                }
+
+                Label board_count {
+                  styles [
+                    "caption",
+                    "dim-label",
+                  ]
+                }
+              }
+
+              Label boards_error {
+                visible: false;
+                wrap: true;
+                xalign: 0;
+                margin-start: 18;
+                margin-end: 18;
+                margin-bottom: 4;
+                label: _("Couldn't refresh this site's boards; showing the built-in list.");
+
+                styles [
+                  "caption",
+                  "dim-label",
+                ]
+              }
+
+              ListBox board_list {
+                selection-mode: single;
+
+                styles [
+                  "navigation-sidebar",
+                ]
+              }
+
+              Label boards_empty {
+                visible: false;
+                label: _("No Matching Boards");
+                margin-top: 12;
+
+                styles [
+                  "dim-label",
+                ]
+              }
+            };
+          }
+        };
+      };
+
+      content: Adw.NavigationView nav_view {};
+    };
+    };
+  };
+}
+
+menu primary_menu {
+  section {
+    item {
+      label: _("_Add Site…");
+      action: "win.add-site";
+    }
+
+    item {
+      label: _("_Preferences");
+      action: "win.preferences";
+    }
+  }
+
+  section {
+    item {
+      label: _("_Keyboard Shortcuts");
+      action: "app.shortcuts";
+    }
+
+    item {
+      label: _("_About Channex");
+      action: "app.about";
+    }
+  }
+
+  section {
+    item {
+      label: _("_Quit");
+      action: "app.quit";
+    }
+  }
+}

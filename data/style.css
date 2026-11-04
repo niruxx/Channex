@@ -1,0 +1,275 @@
+/* App stylesheet, loaded automatically by AdwApplication. Prefer
+ * libadwaita's own style classes; this only covers what they don't. */
+
+/* ---- Catalog cards ---- */
+
+gridview.catalog > child,
+listview.catalog > row {
+  padding: 0;
+  background: none;
+  outline: none;
+}
+
+.thread-card {
+  margin: 6px;
+}
+
+.thread-card .thumbnail-frame {
+  border-radius: 8px;
+  margin: 6px 6px 0 6px;
+  background-color: alpha(currentColor, 0.06);
+}
+
+.thread-row .thumbnail-frame {
+  border-radius: 8px;
+  background-color: alpha(currentColor, 0.06);
+}
+
+/* NSFW / spoiler thumbnails until clicked. */
+.blurred {
+  filter: blur(18px);
+}
+
+/* Small dark pills over thumbnails (sticky, closed, spoiler). */
+.thumbnail-badge {
+  border-radius: 999px;
+  padding: 3px;
+}
+
+/* "Click to Reveal" over a blurred thumbnail. */
+.spoiler-badge {
+  border-radius: 12px;
+  padding: 8px 14px;
+}
+
+/* The bookmark button over a card's thumbnail only shows on hover,
+ * unless the thread is bookmarked. */
+.thread-card .bookmark-button {
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.thread-card:hover .bookmark-button,
+.thread-card .bookmark-button.bookmarked {
+  opacity: 1;
+}
+
+/* ---- Thread posts ---- */
+
+listview.thread > row {
+  padding: 0;
+  background: none;
+}
+
+.post {
+  padding: 12px 14px;
+}
+
+.post.compact {
+  padding: 8px 10px;
+}
+
+.post.modern {
+  padding: 16px 18px;
+  border-radius: 16px;
+}
+
+.post.op {
+  background-color: color-mix(in srgb, var(--card-bg-color) 90%, var(--accent-bg-color));
+}
+
+/* A post scrolled to from a quote link. */
+.post.highlighted {
+  box-shadow: inset 0 0 0 2px var(--accent-bg-color);
+}
+
+.post-comment {
+  font-size: 1.02em;
+}
+
+.op-badge,
+.capcode-badge {
+  border-radius: 999px;
+  padding: 0 7px;
+  font-size: smaller;
+  font-weight: bold;
+}
+
+.op-badge {
+  background-color: var(--accent-bg-color);
+  color: var(--accent-fg-color);
+}
+
+.capcode-badge {
+  background-color: alpha(var(--warning-bg-color), 0.25);
+}
+
+.file-button {
+  padding: 0;
+}
+
+.quote-preview > contents {
+  padding: 0;
+}
+
+.quote-preview .post {
+  margin: 0;
+  box-shadow: none;
+}
+
+/* Count badges in the sidebar (bookmarks). */
+.sidebar-badge {
+  border-radius: 999px;
+  padding: 0 7px;
+  min-width: 8px;
+  background-color: alpha(currentColor, 0.1);
+  font-size: smaller;
+  font-weight: bold;
+}
+
+.sidebar-badge.accent-badge {
+  background-color: var(--accent-bg-color);
+  color: var(--accent-fg-color);
+}
+
+/* ---- Downloads ---- */
+
+.download-card {
+  padding: 14px 16px;
+}
+
+.download-status {
+  border-radius: 999px;
+  padding: 8px;
+  background-color: alpha(currentColor, 0.08);
+}
+
+.download-status.accent { color: var(--accent-color); }
+.download-status.warning { color: var(--warning-color); }
+.download-status.success { color: var(--success-color); }
+
+.download-tile {
+  padding: 2px;
+}
+
+/* The check on a selected tile in "Download Files". */
+.download-check {
+  border-radius: 999px;
+  padding: 4px;
+  background-color: var(--accent-bg-color);
+  color: var(--accent-fg-color);
+}
+
+.download-tile:not(:checked) .download-check {
+  opacity: 0;
+}
+
+.download-tile:not(:checked) .thumbnail-frame {
+  opacity: 0.45;
+}
+
+/* "N new" replies pill. */
+.new-badge {
+  border-radius: 999px;
+  padding: 1px 8px;
+  background-color: var(--accent-bg-color);
+  color: var(--accent-fg-color);
+  font-size: smaller;
+  font-weight: bold;
+}
+
+/* ---- Accent color swatches (Preferences, Welcome) ---- */
+
+.accent-swatch {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: 999px;
+  color: white;
+}
+
+.accent-swatch > image {
+  opacity: 0;
+}
+
+.accent-swatch:checked > image {
+  opacity: 1;
+}
+
+.accent-swatch:checked {
+  outline: 2px solid var(--accent-bg-color);
+  outline-offset: 2px;
+}
+
+.accent-swatch.system {
+  background-image: conic-gradient(#3584e4, #2190a4, #3a944a, #c88800, #ed5b00, #e62d42, #d56199, #9141ac, #3584e4);
+}
+
+.accent-swatch.blue { background-color: #3584e4; }
+.accent-swatch.teal { background-color: #2190a4; }
+.accent-swatch.green { background-color: #3a944a; }
+.accent-swatch.yellow { background-color: #c88800; }
+.accent-swatch.orange { background-color: #ed5b00; }
+.accent-swatch.red { background-color: #e62d42; }
+.accent-swatch.pink { background-color: #d56199; }
+.accent-swatch.purple { background-color: #9141ac; }
+.accent-swatch.slate { background-color: #6f8396; }
+/* .accent-swatch.custom gets its color from theme.rs. */
+
+.welcome-page {
+  padding: 12px 24px;
+}
+
+/* ---- Reply dialog ---- */
+
+.reply-text,
+.reply-text text {
+  background: none;
+}
+
+.captcha-card {
+  padding: 8px;
+}
+
+/* ---- Media viewer ---- */
+
+.media-viewer {
+  background-color: #0e0e10;
+  color: white;
+}
+
+.media-viewer headerbar,
+.media-viewer toolbarview > .bottom-bar {
+  background-color: rgba(20, 20, 23, 0.92);
+  color: white;
+  box-shadow: none;
+}
+
+.media-viewer .filmstrip,
+.media-viewer .filmstrip > row {
+  background: none;
+  padding: 0;
+}
+
+.media-viewer .filmstrip > row {
+  margin: 8px 4px;
+}
+
+.media-viewer .filmstrip-thumb {
+  opacity: 0.55;
+  transition: opacity 120ms ease-out;
+}
+
+.media-viewer .filmstrip > row:selected .filmstrip-thumb {
+  opacity: 1;
+  outline: 2px solid var(--accent-bg-color);
+  outline-offset: 1px;
+}
+
+.media-viewer .filmstrip > row:hover .filmstrip-thumb {
+  opacity: 0.9;
+}
+
+.media-viewer statuspage {
+  color: white;
+}

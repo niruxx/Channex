@@ -1,0 +1,58 @@
+{
+  "id": "io.github.niruxx.Channex",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "50",
+  "sdk": "org.gnome.Sdk",
+  "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
+  "command": "channex",
+  "finish-args": [
+    "--share=network",
+    "--share=ipc",
+    "--socket=fallback-x11",
+    "--socket=wayland",
+    "--device=dri",
+    "--filesystem=xdg-download/Channex:create"
+  ],
+  "build-options": {
+    "append-path": "/usr/lib/sdk/rust-stable/bin",
+    "env": {
+      "CARGO_HOME": "/run/build/channex/cargo",
+      "CARGO_NET_OFFLINE": "true"
+    }
+  },
+  "cleanup": ["/include", "/lib/pkgconfig", "/share/man"],
+  "modules": [
+    {
+      "name": "blueprint-compiler",
+      "buildsystem": "meson",
+      "cleanup": ["*"],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://gitlab.gnome.org/GNOME/blueprint-compiler",
+          "tag": "v0.22.2",
+          "commit": "ed35ac74de0c1bb1f5e852410b97edd1f08904c9"
+        }
+      ]
+    },
+    {
+      "name": "channex",
+      "buildsystem": "simple",
+      "build-commands": [
+        "cargo --offline build --release --locked",
+        "install -Dm755 target/release/channex /app/bin/channex",
+        "install -Dm644 data/io.github.niruxx.Channex.desktop /app/share/applications/io.github.niruxx.Channex.desktop",
+        "install -Dm644 data/io.github.niruxx.Channex.metainfo.xml /app/share/metainfo/io.github.niruxx.Channex.metainfo.xml",
+        "install -Dm644 data/icons/hicolor/scalable/apps/io.github.niruxx.Channex.svg /app/share/icons/hicolor/scalable/apps/io.github.niruxx.Channex.svg"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "../..",
+          "skip": ["target", "build", "build-appimage", "packaging/arch/src", "packaging/arch/pkg", ".flatpak-builder"]
+        },
+        "cargo-sources.json"
+      ]
+    }
+  ]
+}

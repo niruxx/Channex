@@ -1,0 +1,11 @@
+{"threadId": 100, "boardUri": "b", "subject": "Hello &amp; welcome", "name": "Anonymous",
+ "markdown": "<p>op text</p>", "message": "op text", "creation": "2023-11-14T22:13:20.000Z",
+ "pinned": false, "locked": false, "archived": false,
+ "files": [{"path": "/.media/abc.png", "thumb": "/.media/t_abc", "mime": "image/png", "originalName": "abc.png",
+            "size": 1000, "width": 10, "height": 10}],
+ "posts": [
+   {"postId": 101, "name": "BO", "signedRole": "Board owner",
+    "markdown": "<a class=\"quoteLink\" href=\"/b/res/100.html#100\">&gt;&gt;100</a>",
+    "creation": "2023-11-14T22:20:00.000Z",
+    "files": [{"path": "/.media/vid.webm", "mime": "video/webm", "originalName": "v.webm", "size": 2000}]}
+ ]}

@@ -1,9 +1,17 @@
-build/
-build-*/
-CMakeUserPresets.json
-*.user
-*.user.*
+# Rust
+/target/
+
+# Scratch output (headless screenshots, test profiles)
+/build/
+
+# Arch packaging (makepkg)
 packaging/arch/src/
 packaging/arch/pkg/
 packaging/arch/*.pkg.tar.*
 packaging/arch/makepkg.log
+
+# Flatpak (cargo-sources.json is generated from Cargo.lock)
+.flatpak-builder/
+packaging/flatpak/cargo-sources.json
+packaging/flatpak/build-dir/
+*.flatpak

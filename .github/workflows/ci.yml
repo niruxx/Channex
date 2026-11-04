@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    # Ubuntu's GTK/libadwaita are too old; Arch tracks current GNOME.
+    container: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm --needed git rust gtk4 libadwaita blueprint-compiler desktop-file-utils appstream
+      - uses: actions/checkout@v4
+      - name: Format
+        run: cargo fmt --check
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Test
+        run: cargo test
+      - name: Validate desktop file and metainfo
+        run: |
+          desktop-file-validate data/io.github.niruxx.Channex.desktop
+          appstreamcli validate --no-net --pedantic data/io.github.niruxx.Channex.metainfo.xml || appstreamcli validate --no-net data/io.github.niruxx.Channex.metainfo.xml

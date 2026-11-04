@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Channex
+Comment=Browse imageboards
+Exec=channex
+Icon=io.github.niruxx.Channex
+Terminal=false
+Type=Application
+Categories=Network;GTK;
+Keywords=imageboard;4chan;chan;forum;
+StartupNotify=true

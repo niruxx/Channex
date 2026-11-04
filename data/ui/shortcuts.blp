@@ -1,0 +1,66 @@
+using Gtk 4.0;
+using Adw 1;
+
+Adw.ShortcutsDialog shortcuts_dialog {
+  Adw.ShortcutsSection {
+    title: _("General");
+
+    Adw.ShortcutsItem {
+      title: _("Show/Hide Sidebar");
+      accelerator: "F9";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Go Back");
+      accelerator: "<Alt>Left";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Preferences");
+      accelerator: "<Control>comma";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Keyboard Shortcuts");
+      accelerator: "<Control>question";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Close Window");
+      accelerator: "<Control>w";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Quit");
+      accelerator: "<Control>q";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Catalog");
+
+    Adw.ShortcutsItem {
+      title: _("Search");
+      accelerator: "<Control>f";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Refresh");
+      accelerator: "F5";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Thread");
+
+    Adw.ShortcutsItem {
+      title: _("Bookmark Thread");
+      accelerator: "<Control>d";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Refresh");
+      accelerator: "F5";
+    }
+  }
+}

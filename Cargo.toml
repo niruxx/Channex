@@ -1,0 +1,24 @@
+[package]
+name = "channex"
+version = "0.2.0"
+edition = "2024"
+description = "A native imageboard browser"
+rust-version = "1.85"
+
+[dependencies]
+adw = { version = "0.9.2", package = "libadwaita", features = ["v1_8"] }
+gtk = { version = "0.11.5", package = "gtk4", features = ["v4_18"] }
+percent-encoding = "2.3.2"
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls", "gzip", "brotli", "system-proxy", "multipart", "stream", "cookies"] }
+scraper = "0.29.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "time", "macros"] }
+url = "2.5.8"
+
+[build-dependencies]
+glib-build-tools = "0.22.8"
+
+[dev-dependencies]
+tempfile = "3.27.0"
